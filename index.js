@@ -15,5 +15,5 @@ app.get("/", (req, res) => {
   });
   
   app.listen(port, () => {
-    console.log(`Fitness is Running on port ${port}`);
+    console.log(`Fitness are Running on port ${port}`);
   });
