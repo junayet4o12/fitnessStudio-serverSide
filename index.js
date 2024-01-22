@@ -29,7 +29,7 @@ async function run() {
     const FeedbackCollection = FitnessStudio.collection('Feedback')
 
 
-    // feedback start
+    // feedbackkk start
 
     app.get('/feedback', async (req, res) => {
       const result = await FeedbackCollection.find().toArray()
@@ -61,4 +61,3 @@ app.listen(port, () => {
   console.log(`Fitness are Running on port ${port}`);
 });
 
-// fhff
