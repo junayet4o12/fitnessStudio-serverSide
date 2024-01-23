@@ -54,6 +54,28 @@ async function run() {
       const result = await UsersCollection.find().toArray()
       res.send(result)
     })
+    app.get('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const query= {email: email};
+      const result = await UsersCollection.findOne(query)
+      res.send(result)
+    })
+    app.put('/upade_user_data/:email', async (req, res) => {
+      const email = req.params.email;
+      const data = req?.body
+      const query= {email: email};
+      console.log(data);
+      const updatedData = {
+        $set: {
+          birthDay: data?.birthDay,
+          weight: data?.weight,
+          height: data?.height,
+          gender: data?.gender
+        }
+      }
+      const result = await UsersCollection.updateOne(query, updatedData)
+      res.send(result)
+    })
 
     // user end
     await client.connect();
@@ -75,3 +97,5 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`Fitness are Running on port ${port}`);
 });
+
+// fhff
