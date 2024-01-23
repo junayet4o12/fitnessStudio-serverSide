@@ -27,6 +27,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     const FitnessStudio = client.db('FitnessStudio')
     const FeedbackCollection = FitnessStudio.collection('Feedback')
+    const UsersCollection = FitnessStudio.collection('Users')
 
 
     // feedback start
@@ -35,11 +36,47 @@ async function run() {
       const result = await FeedbackCollection.find().toArray()
       res.send(result)
     })
- 
+
     // feedback end
     // user start
-    
-    
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email }
+      const axistingUser = await UsersCollection.findOne(query);
+      if (axistingUser) {
+        return res.send({ message: ' use already exists' })
+      }
+      const result = await UsersCollection.insertOne(user);
+      res.send(result)
+    })
+
+    app.get('/users', async (req, res) => {
+      const result = await UsersCollection.find().toArray()
+      res.send(result)
+    })
+    app.get('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const query= {email: email};
+      const result = await UsersCollection.findOne(query)
+      res.send(result)
+    })
+    app.put('/upade_user_data/:email', async (req, res) => {
+      const email = req.params.email;
+      const data = req?.body
+      const query= {email: email};
+      console.log(data);
+      const updatedData = {
+        $set: {
+          birthDay: data?.birthDay,
+          weight: data?.weight,
+          height: data?.height,
+          gender: data?.gender
+        }
+      }
+      const result = await UsersCollection.updateOne(query, updatedData)
+      res.send(result)
+    })
+
     // user end
     await client.connect();
     // Send a ping to confirm a successful connection
