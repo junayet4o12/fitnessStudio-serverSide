@@ -71,6 +71,7 @@ async function run() {
       console.log(data);
       const updatedData = {
         $set: {
+          name: data?.name,
           birthDay: data?.birthDay,
           weight: data?.weight,
           height: data?.height,
