@@ -2,13 +2,19 @@ const express = require("express");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const cors = require("cors");
 const app = express();
-
+const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 5000;
 require("dotenv").config();
-
+const jwt = require('jsonwebtoken');
 // middleware
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({
+  origin:['http://localhost:5173'],
+  credentials:true,
+  
+}));
 app.use(express.json());
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqva6ft.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -37,12 +43,28 @@ async function run() {
     });
 
     // feedback end
+
+    // Auth related api
+    app.post('/jwt', async (req, res) => {
+      const user = req.body
+      console.log(user)
+      const token = jwt.sign(user, process.env.SECRET_TOKEN, { expiresIn: '1h' })
+      console.log('token is', token)
+      res.
+      cookie("token", token, 
+      { httpOnly: true, 
+        secure: false, 
+        sameSite: 'none' 
+      })
+      .send({ setToken: 'success' })
+    })
+
     // user start
     app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
-      const axistingUser = await UsersCollection.findOne(query);
-      if (axistingUser) {
+      const existingUser = await UsersCollection.findOne(query);
+      if (existingUser) {
         return res.send({ message: " use already exists" });
       }
       const result = await UsersCollection.insertOne(user);
@@ -50,6 +72,7 @@ async function run() {
     });
     app.post("/user_goal", async (req, res) => {
       const goalInfo = req.body;
+      const token = console.log('tok tok token', req.cookies.token)
       const result = await UserGoalCollection.insertOne(goalInfo);
       res.send(result);
     });
@@ -64,7 +87,7 @@ async function run() {
       const result = await UsersCollection.findOne(query);
       res.send(result);
     });
-    app.put("/upade_user_data/:email", async (req, res) => {
+    app.put("/update_user_data/:email", async (req, res) => {
       const email = req.params.email;
       const data = req?.body;
       const query = { email: email };
