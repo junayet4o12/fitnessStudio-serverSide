@@ -2,13 +2,19 @@ const express = require("express");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const cors = require("cors");
 const app = express();
-
+const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 5000;
 require("dotenv").config();
-
+const jwt = require('jsonwebtoken');
 // middleware
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({
+  origin: ['https://fitness-studio-8a6af.web.app'],
+  credentials: true,
+
+}));
 app.use(express.json());
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqva6ft.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -20,6 +26,26 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
+// verify token middleware
+
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies.token
+  jwt.verify(token, process.env.SECRET_TOKEN, function (err, decoded) {
+    if (!token) {
+      return res.status(401).send({ message: 'unauthorized' })
+    }
+    if (err) {
+      console.log(err)
+      return res.status(403).send({ message: 'Bad Request' })
+    }
+    else {
+      console.log('decoded code', decoded)
+      req.user = decoded
+      next()
+    }
+  })
+}
 
 async function run() {
   try {
@@ -37,49 +63,89 @@ async function run() {
     });
 
     // feedback end
+
+    // Auth related api start
+    app.post('/jwt', async (req, res) => {
+      const user = req.body
+      console.log(user)
+      const token = jwt.sign(user, process.env.SECRET_TOKEN, { expiresIn: '1h' })
+      console.log('token is', token)
+      res.
+        cookie("token", token,
+          {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None'
+          })
+        .send({ setToken: 'success' })
+    })
+
+        // Auth related api end
+
+
     // user start
     app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
-      const axistingUser = await UsersCollection.findOne(query);
-      if (axistingUser) {
+      const existingUser = await UsersCollection.findOne(query);
+      if (existingUser) {
         return res.send({ message: " use already exists" });
       }
       const result = await UsersCollection.insertOne(user);
       res.send(result);
     });
-    app.post("/user_goal", async (req, res) => {
+
+
+    app.post("/user_goal", verifyToken, async (req, res) => {
       const goalInfo = req.body;
       const result = await UserGoalCollection.insertOne(goalInfo);
       res.send(result);
     });
 
-    app.get("/users", async (req, res) => {
+
+    app.get("/users", verifyToken, async (req, res) => {
       const result = await UsersCollection.find().toArray();
       res.send(result);
     });
-    app.get("/users/:email", async (req, res) => {
+
+
+    app.get("/users/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
-      const query = { email: email };
-      const result = await UsersCollection.findOne(query);
-      res.send(result);
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: 'forbidden' })
+      }
+      else {
+
+        const query = { email: email };
+        const result = await UsersCollection.findOne(query);
+        res.send(result);
+      }
     });
-    app.put("/upade_user_data/:email", async (req, res) => {
+
+
+    app.put("/update_user_data/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const data = req?.body;
-      const query = { email: email };
-      console.log(data);
-      const updatedData = {
-        $set: {
-          name: data?.name,
-          birthDay: data?.birthDay,
-          weight: data?.weight,
-          height: data?.height,
-          gender: data?.gender,
-        },
-      };
-      const result = await UsersCollection.updateOne(query, updatedData);
-      res.send(result);
+      if (email !== req?.user?.email) {
+        return res.status(403).send({ message: 'forbidden' })
+
+      }
+      else {
+
+        const query = { email: email };
+        console.log(data);
+        const updatedData = {
+          $set: {
+            name: data?.name,
+            birthDay: data?.birthDay,
+            weight: data?.weight,
+            height: data?.height,
+            gender: data?.gender,
+          },
+        };
+        const result = await UsersCollection.updateOne(query, updatedData);
+        res.send(result);
+      }
     });
 
     // user end
