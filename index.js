@@ -53,6 +53,10 @@ async function run() {
       const result = await UserGoalCollection.insertOne(goalInfo);
       res.send(result);
     });
+    app.get("/user_goal", async (req, res) => {
+      const result = await UserGoalCollection.find().toArray();
+      res.send(result);
+    });
 
     app.get("/users", async (req, res) => {
       const result = await UsersCollection.find().toArray();
@@ -64,7 +68,7 @@ async function run() {
       const result = await UsersCollection.findOne(query);
       res.send(result);
     });
-    app.put("/upade_user_data/:email", async (req, res) => {
+    app.put("/update_user_data/:email", async (req, res) => {
       const email = req.params.email;
       const data = req?.body;
       const query = { email: email };
@@ -83,7 +87,7 @@ async function run() {
     });
 
     // user end
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
