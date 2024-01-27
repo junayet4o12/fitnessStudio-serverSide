@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 // middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: ['https://fitness-studio-8a6af.web.app'],
+  origin: ['http://localhost:5173'],
   credentials: true,
 
 }));
@@ -74,10 +74,14 @@ async function run() {
         cookie("token", token,
           {
             httpOnly: true,
-            secure: true,
-            sameSite: 'None'
+            secure: false,
+            sameSite: 'Lax'
           })
         .send({ setToken: 'success' })
+    })
+
+    app.post('/logout', async(req,res)=>{
+      res.cookie('token', '', { expires: new Date(0), httpOnly: true }).send({message:'logged out Successfully'})
     })
 
         // Auth related api end
