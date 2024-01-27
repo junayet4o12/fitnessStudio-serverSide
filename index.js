@@ -36,6 +36,7 @@ const verifyToken = async (req, res, next) => {
       return res.status(401).send({ message: 'unauthorized' })
     }
     if (err) {
+      console.log(err)
       return res.status(403).send({ message: 'Bad Request' })
     }
     else {
@@ -56,7 +57,7 @@ async function run() {
 
     // feedback start
 
-    app.get("/feedback", verifyToken, async (req, res) => {
+    app.get("/feedback", async (req, res) => {
       const result = await FeedbackCollection.find().toArray();
       res.send(result);
     });
