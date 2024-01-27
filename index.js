@@ -74,7 +74,7 @@ async function run() {
         cookie("token", token,
           {
             httpOnly: true,
-            secure: true,
+            // secure: true,
             // sameSite: 'Lax'
           })
         .send({ setToken: 'success' })
