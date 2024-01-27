@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 // middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: ['http://localhost:5173'],
+  origin: ['https://fitness-studio-8a6af.web.app'],
   credentials: true,
 
 }));
