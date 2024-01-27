@@ -75,7 +75,7 @@ async function run() {
           {
             httpOnly: true,
             secure: true,
-            sameSite: 'Lax'
+            // sameSite: 'Lax'
           })
         .send({ setToken: 'success' })
     })
