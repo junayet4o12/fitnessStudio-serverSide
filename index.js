@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 // middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: ['https://fitness-studio-8a6af.web.app'],
+  origin: [ 'http://localhost:5173'],
   credentials: true,
 
 }));
@@ -75,7 +75,7 @@ async function run() {
           {
             httpOnly: true,
             secure: true,
-            sameSite: 'None'
+            sameSite: 'Lax'
           })
         .send({ setToken: 'success' })
     })
@@ -115,7 +115,9 @@ async function run() {
 
     app.get("/users/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
+      
       if (email !== req.user.email) {
+        
         return res.status(403).send({ message: 'forbidden' })
       }
       else {
