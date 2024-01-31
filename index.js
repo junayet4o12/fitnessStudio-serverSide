@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const app = express();
 const cookieParser = require('cookie-parser')
@@ -60,6 +60,7 @@ async function run() {
     const FeedbackCollection = FitnessStudio.collection("Feedback");
     const UsersCollection = FitnessStudio.collection("Users");
     const UserGoalCollection = FitnessStudio.collection("User_Goal");
+    const BlogsCollection = FitnessStudio.collection("Blogs_Collections");
 
 
     // fitbit start
@@ -144,7 +145,10 @@ async function run() {
         const tokenResponse = await axios.post('https://www.strava.com/oauth/token', postData);
 
         // Extract the access token from the response
+<<<<<<< HEAD
         console.log(tokenResponse.data)
+=======
+>>>>>>> 1a9cf630cf3f522c595047c835003f91547a4a7e
         const accessToken = tokenResponse.data.access_token;
 
         // Return the access token to the client
@@ -273,8 +277,49 @@ async function run() {
         res.send(result);
       }
     });
-
     // user end
+
+    // blogs start
+    app.get('/blogs', async (req, res) => {
+      const result = await BlogsCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.get('/my_blogs/:email', async (req, res) => {
+      const email = req.params.email
+      const query = { email: email }
+      const result = await BlogsCollection.find(email).toArray()
+      res.send(result)
+    })
+
+    app.post('/post_blog', async (req, res) => {
+      const data = req?.body;
+      const result = await BlogsCollection.insertOne(data);
+      res.send(result);
+    })
+    app.delete('/delete_blog/:id', async (req, res) => {
+      const id = req?.params?.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await BlogsCollection.deleteOne(query);
+      res.send(result)
+    })
+
+    app.put('/update_blog/:id', async (req, res) => {
+      const data = req?.body;
+      const id = req?.params?.id;
+      const query = { _id: new ObjectId(id) }
+      const updatedData = {
+        $set: {
+          blogDes: data?.blogDes,
+          blogImg: data?.blogImg,
+          blogName: data?.blogName
+        }
+      }
+      const result = await BlogsCollection.updateOne(query, updatedData)
+      res.send(result)
+    })
+    // blogs end 
+
     // await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
