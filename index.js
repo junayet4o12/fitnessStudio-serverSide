@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const app = express();
 const cookieParser = require('cookie-parser')
@@ -56,6 +56,7 @@ async function run() {
     const FeedbackCollection = FitnessStudio.collection("Feedback");
     const UsersCollection = FitnessStudio.collection("Users");
     const UserGoalCollection = FitnessStudio.collection("User_Goal");
+    const BlogsCollection = FitnessStudio.collection("Blogs_Collections");
 
     // strava start
 
@@ -78,32 +79,32 @@ async function run() {
 
     app.post('/callbackstrava', async (req, res) => {
       const code = req.body.exchangeCode;
-  
-      console.log('exchange code',code)
-  
+
+      console.log('exchange code', code)
+
       const tokenUrl = 'https://www.strava.com/oauth/token';
-    
-    
+
+
       try {
-          console.log('the code is',code)
-          const postData = new URLSearchParams();
-          postData.append('client_id', 120695);
-          postData.append('client_secret', clientSecretstrava);
-          postData.append('code', code);
-          postData.append('grant_type', 'authorization_code');
-          postData.append('redirect_uri', redirectUri);
-          const tokenResponse = await axios.post('https://www.strava.com/oauth/token', postData);
-  
-          // Extract the access token from the response
-          const accessToken = tokenResponse.data.access_token;
-  
-          // Return the access token to the client
-          res.json({ accessToken });
+        console.log('the code is', code)
+        const postData = new URLSearchParams();
+        postData.append('client_id', 120695);
+        postData.append('client_secret', clientSecretstrava);
+        postData.append('code', code);
+        postData.append('grant_type', 'authorization_code');
+        postData.append('redirect_uri', redirectUri);
+        const tokenResponse = await axios.post('https://www.strava.com/oauth/token', postData);
+
+        // Extract the access token from the response
+        const accessToken = tokenResponse.data.access_token;
+
+        // Return the access token to the client
+        res.json({ accessToken });
       } catch (error) {
-          console.error('Error:', error);
-          res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
       }
-  });
+    });
     // strava end
 
     // feedback start
@@ -208,8 +209,49 @@ async function run() {
         res.send(result);
       }
     });
-
     // user end
+
+    // blogs start
+    app.get('/blogs', async (req, res) => {
+      const result = await BlogsCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.get('/my_blogs/:email', async (req, res) => {
+      const email = req.params.email
+      const query = { email: email }
+      const result = await BlogsCollection.find(email).toArray()
+      res.send(result)
+    })
+
+    app.post('/post_blog', async (req, res) => {
+      const data = req?.body;
+      const result = await BlogsCollection.insertOne(data);
+      res.send(result);
+    })
+    app.delete('/delete_blog/:id', async (req, res) => {
+      const id = req?.params?.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await BlogsCollection.deleteOne(query);
+      res.send(result)
+    })
+
+    app.put('/update_blog/:id', async (req, res) => {
+      const data = req?.body;
+      const id = req?.params?.id;
+      const query = { _id: new ObjectId(id) }
+      const updatedData = {
+        $set: {
+          blogDes: data?.blogDes,
+          blogImg: data?.blogImg,
+          blogName: data?.blogName
+        }
+      }
+      const result = await BlogsCollection.updateOne(query, updatedData)
+      res.send(result)
+    })
+    // blogs end 
+
     // await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
