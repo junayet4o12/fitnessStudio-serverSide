@@ -8,7 +8,7 @@ const axiosSecure = axios.create({
   timeout: 5000,
   headers: {
     'Content-Type': 'application/x-www-form-urlencoded',
-    'Authorization': 'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64')
+    'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
 },
 });
 

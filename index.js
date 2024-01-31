@@ -7,15 +7,20 @@ const port = process.env.PORT || 3000;
 require("dotenv").config();
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
+const queryString = require('querystring');
+const axiosSecure = require("./axiosSecure");
+
 // middleware
 app.use(cookieParser());
 app.use(cors({
   origin: ['http://localhost:5173'],
   credentials: true,
-
+  
 }));
 app.use(express.json());
 
+const clientId = '23RMXW'
+const redirect_uri = 'http://localhost:5173/permission'
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqva6ft.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -59,43 +64,42 @@ async function run() {
 
     // fitbit start
     app.get('/authorize', (req, res) => {
-    const authorizeUrl = 'https://www.fitbit.com/oauth2/authorize?' +
-        querystring.stringify({
-            response_type: 'code',
-            client_id: clientId,
-            redirect_uri: redirectUri,
-            scope: 'activity profile cardio_fitness electrocardiogram heartrate location nutrition oxygen_saturation respiratory_rate settings sleep social temperature weight',
-            state: '41c9f028be1b36f726b49e7d0d563639',
+      const authorizeUrl = 'https://www.fitbit.com/oauth2/authorize?' +
+        queryString.stringify({
+          response_type: 'code',
+          client_id: clientId,
+          redirect_uri: redirect_uri,
+          scope: 'activity profile cardio_fitness electrocardiogram heartrate location nutrition oxygen_saturation respiratory_rate settings sleep social temperature weight',
+          state: '41c9f028be1b36f726b49e7d0d563639',
         });
 
-    res.send({ auth: authorizeUrl });
-});
+      res.send({ auth: authorizeUrl });
+    });
 
-app.post('/callback', async (req, res) => {
-    const code = req.body.exchangeCode;
+    app.post('/callback', async (req, res) => {
+      const code = req.body.exchangeCode;
 
-    console.log('exchange code',code)
+      console.log('exchange code', code)
 
-    const tokenUrl = 'https://api.fitbit.com/oauth2/token';
-  
-  
-    try {
-        console.log('the code is',code)
+      const tokenUrl = 'https://api.fitbit.com/oauth2/token';
+
+
+      try {
         const postData = new URLSearchParams();
         postData.append('code', code);
         postData.append('grant_type', 'authorization_code');
-        postData.append('redirect_uri', redirectUri);
+        postData.append('redirect_uri', redirect_uri);
         const tokenResponse = await axiosSecure.post(tokenUrl, postData,
-            );
+        );
         const tokenData = tokenResponse.data;
         console.log("token data is", tokenData)
 
-        res.send({ accessToken: tokenData})
-    } catch (error) {
+        res.send({ accessToken: tokenData })
+      } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+      }
+    });
 
 
 
@@ -110,7 +114,7 @@ app.post('/callback', async (req, res) => {
 
     app.get('/authorizestrava', (req, res) => {
       const authorizeUrl = 'https://www.strava.com/oauth/authorize?' +
-        querystring.stringify({
+        queryString.stringify({
           response_type: 'code',
           client_id: clientIdstrava,
           redirect_uri: redirectUri,
@@ -123,32 +127,33 @@ app.post('/callback', async (req, res) => {
 
     app.post('/callbackstrava', async (req, res) => {
       const code = req.body.exchangeCode;
-  
-      console.log('exchange code',code)
-  
+
+      console.log('exchange code', code)
+
       const tokenUrl = 'https://www.strava.com/oauth/token';
-    
-    
+
+
       try {
-          console.log('the code is',code)
-          const postData = new URLSearchParams();
-          postData.append('client_id', 120695);
-          postData.append('client_secret', clientSecretstrava);
-          postData.append('code', code);
-          postData.append('grant_type', 'authorization_code');
-          postData.append('redirect_uri', redirectUri);
-          const tokenResponse = await axios.post('https://www.strava.com/oauth/token', postData);
-  
-          // Extract the access token from the response
-          const accessToken = tokenResponse.data.access_token;
-  
-          // Return the access token to the client
-          res.json({ accessToken });
+        console.log('the code is', code)
+        const postData = new URLSearchParams();
+        postData.append('client_id', 120695);
+        postData.append('client_secret', clientSecretstrava);
+        postData.append('code', code);
+        postData.append('grant_type', 'authorization_code');
+        postData.append('redirect_uri', redirectUri);
+        const tokenResponse = await axios.post('https://www.strava.com/oauth/token', postData);
+
+        // Extract the access token from the response
+        console.log(tokenResponse.data)
+        const accessToken = tokenResponse.data.access_token;
+
+        // Return the access token to the client
+        res.json({ accessToken });
       } catch (error) {
-          console.error('Error:', error);
-          res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
       }
-  });
+    });
     // strava end
 
     // feedback start
@@ -176,15 +181,15 @@ app.post('/callback', async (req, res) => {
         .send({ setToken: 'success' })
     })
 
-    app.post('/logout', async(req,res)=>{
-      res.cookie('token', '', { expires: new Date(0), httpOnly: true }).send({message:'logged out Successfully'})
+    app.post('/logout', async (req, res) => {
+      res.cookie('token', '', { expires: new Date(0), httpOnly: true }).send({ message: 'logged out Successfully' })
     })
 
-        // Auth related api end
+    // Auth related api end
 
     // fitbit api
 
-    
+
     // user start
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -203,21 +208,21 @@ app.post('/callback', async (req, res) => {
       const result = await UserGoalCollection.insertOne(goalInfo);
       res.send(result);
     });
-    
-    app.get('/user_goal/:email', verifyToken,async(req,res)=>{
+
+    app.get('/user_goal/:email', verifyToken, async (req, res) => {
       const email = req.params.email
       console.log(email)
       if (email !== req.user.email) {
         return res.status(403).send({ message: 'forbidden' })
       }
-      else{
+      else {
         const query = { user_email: email };
         const result = await UserGoalCollection.find(query).toArray();
         res.send(result)
-    app.get("/user_goal", async (req, res) => {
-      const result = await UserGoalCollection.find().toArray();
-      res.send(result);
-    });
+        app.get("/user_goal", async (req, res) => {
+          const result = await UserGoalCollection.find().toArray();
+          res.send(result);
+        });
 
       }
     })
