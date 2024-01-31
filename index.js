@@ -3,9 +3,14 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const cors = require("cors");
 const app = express();
 const cookieParser = require('cookie-parser')
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 require("dotenv").config();
 const jwt = require('jsonwebtoken');
+const axiosSecure = require("./axiosSecure");
+const querystring = require('querystring');
+const clientId = '23RMXW';
+const clientSecret = 'c761a7e0676e522c105a94ab105c9f27';
+const redirectUri = 'http://localhost:5173/permission';
 // middleware
 app.use(cookieParser());
 app.use(cors({
@@ -86,6 +91,49 @@ async function run() {
 
         // Auth related api end
 
+    // fitbit api
+
+    app.get('/authorize', (req, res) => {
+    const authorizeUrl = 'https://www.fitbit.com/oauth2/authorize?' +
+        querystring.stringify({
+            response_type: 'code',
+            client_id: clientId,
+            redirect_uri: redirectUri,
+            scope: 'activity profile cardio_fitness electrocardiogram heartrate location nutrition oxygen_saturation respiratory_rate settings sleep social temperature weight',
+            state: '41c9f028be1b36f726b49e7d0d563639',
+        });
+
+    res.send({ auth: authorizeUrl });
+});
+
+app.post('/callback', async (req, res) => {
+    const code = req.body.exchangeCode;
+
+    console.log('exchange code',code)
+
+    const tokenUrl = 'https://api.fitbit.com/oauth2/token';
+  
+  
+    try {
+        console.log('the code is',code)
+        const postData = new URLSearchParams();
+        postData.append('code', code);
+        postData.append('grant_type', 'authorization_code');
+        postData.append('redirect_uri', redirectUri);
+        const tokenResponse = await axiosSecure.post(tokenUrl, postData,
+            );
+        const tokenData = tokenResponse.data;
+        console.log("token data is", tokenData)
+
+        res.send({ accessToken: tokenData})
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+
 
     // user start
     app.post("/users", async (req, res) => {
@@ -105,7 +153,20 @@ async function run() {
       const result = await UserGoalCollection.insertOne(goalInfo);
       res.send(result);
     });
+    
+    app.get('/user_goal/:email', verifyToken,async(req,res)=>{
+      const email = req.params.email
+      console.log(email)
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: 'forbidden' })
+      }
+      else{
+        const query = { user_email: email };
+        const result = await UserGoalCollection.find(query).toArray();
+        res.send(result)
 
+      }
+    })
 
     app.get("/users", verifyToken, async (req, res) => {
       const result = await UsersCollection.find().toArray();
