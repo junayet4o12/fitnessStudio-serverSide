@@ -6,10 +6,12 @@ const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 const jwt = require('jsonwebtoken');
+const querystring = require('querystring');
+const axios = require('axios');
 // middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: ['https://fitness-studio-8a6af.web.app'],
+  origin: ['http://localhost:5173'],
   credentials: true,
 
 }));
@@ -55,6 +57,55 @@ async function run() {
     const UsersCollection = FitnessStudio.collection("Users");
     const UserGoalCollection = FitnessStudio.collection("User_Goal");
 
+    // strava start
+
+    const clientIdstrava = 120695;
+    const clientSecretstrava = '50df764cea6b288538cec244e9d45ca11c7f571d';
+    const redirectUri = 'http://localhost:5173/dashboard/connect_app';
+
+    app.get('/authorizestrava', (req, res) => {
+      const authorizeUrl = 'https://www.strava.com/oauth/authorize?' +
+        querystring.stringify({
+          response_type: 'code',
+          client_id: clientIdstrava,
+          redirect_uri: redirectUri,
+          scope: 'read,activity:read_all',
+          state: '41c9f028be1b36f726b49e7d0d563639',
+        });
+
+      res.send({ auth: authorizeUrl });
+    });
+
+    app.post('/callbackstrava', async (req, res) => {
+      const code = req.body.exchangeCode;
+  
+      console.log('exchange code',code)
+  
+      const tokenUrl = 'https://www.strava.com/oauth/token';
+    
+    
+      try {
+          console.log('the code is',code)
+          const postData = new URLSearchParams();
+          postData.append('client_id', 120695);
+          postData.append('client_secret', clientSecretstrava);
+          postData.append('code', code);
+          postData.append('grant_type', 'authorization_code');
+          postData.append('redirect_uri', redirectUri);
+          const tokenResponse = await axios.post('https://www.strava.com/oauth/token', postData);
+  
+          // Extract the access token from the response
+          const accessToken = tokenResponse.data.access_token;
+  
+          // Return the access token to the client
+          res.json({ accessToken });
+      } catch (error) {
+          console.error('Error:', error);
+          res.status(500).json({ error: 'Internal Server Error' });
+      }
+  });
+    // strava end
+
     // feedback start
 
     app.get("/feedback", async (req, res) => {
@@ -74,13 +125,17 @@ async function run() {
         cookie("token", token,
           {
             httpOnly: true,
-            secure: true,
-            sameSite: 'None'
+            secure: false,
+            sameSite: 'Lax'
           })
         .send({ setToken: 'success' })
     })
 
-        // Auth related api end
+    app.post('/logout', async (req, res) => {
+      res.cookie('token', '', { expires: new Date(0), httpOnly: true }).send({ message: 'logged out Successfully' })
+    })
+
+    // Auth related api end
 
 
     // user start
@@ -101,6 +156,10 @@ async function run() {
       const result = await UserGoalCollection.insertOne(goalInfo);
       res.send(result);
     });
+    app.get("/user_goal", async (req, res) => {
+      const result = await UserGoalCollection.find().toArray();
+      res.send(result);
+    });
 
 
     app.get("/users", verifyToken, async (req, res) => {
@@ -111,7 +170,9 @@ async function run() {
 
     app.get("/users/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
+
       if (email !== req.user.email) {
+
         return res.status(403).send({ message: 'forbidden' })
       }
       else {
@@ -149,7 +210,7 @@ async function run() {
     });
 
     // user end
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
