@@ -225,9 +225,14 @@ async function run() {
       res.send(result);
     })
 
+<<<<<<< HEAD
     // using query for specific users blog show
     app.get('/my_blogs', async (req, res) => {
       const email = req.query.email;
+=======
+    app.get('/my_blogs/:email', async (req, res) => {
+      const email = req.params.email
+>>>>>>> 44a2a8ad0c00e074fd792787776b6b57220420d8
       const query = { userEmail: email }
       const result = await BlogsCollection.find(query).toArray()
       res.send(result)
