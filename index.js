@@ -211,22 +211,23 @@ async function run() {
     });
     // user end
 
-    // blogs start
 
+    // blogs start here
     app.get('/blogs', async (req, res) => {
       const result = await BlogsCollection.find().toArray()
       res.send(result)
     })
 
-    app.get('/single_blog/:id', async (req, res) => {
-      const id = req?.params?.id;
-      const query = { _id: new ObjectId(id) }
+    app.get('/blogs/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
       const result = await BlogsCollection.findOne(query)
-      res.send(result)
+      res.send(result);
     })
 
-    app.get('/my_blogs/:email', async (req, res) => {
-      const email = req.params.email
+    // using query for specific users blog show
+    app.get('/my_blogs', async (req, res) => {
+      const email = req.query.email;
       const query = { userEmail: email }
       const result = await BlogsCollection.find(query).toArray()
       res.send(result)
@@ -237,6 +238,7 @@ async function run() {
       const result = await BlogsCollection.insertOne(data);
       res.send(result);
     })
+
     app.delete('/delete_blog/:id', async (req, res) => {
       const id = req?.params?.id;
       const query = { _id: new ObjectId(id) }
@@ -258,7 +260,7 @@ async function run() {
       const result = await BlogsCollection.updateOne(query, updatedData)
       res.send(result)
     })
-    // blogs end 
+    // blogs end here
 
     // await client.connect();
     // Send a ping to confirm a successful connection
