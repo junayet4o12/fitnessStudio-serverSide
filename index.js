@@ -212,8 +212,16 @@ async function run() {
     // user end
 
     // blogs start
+
     app.get('/blogs', async (req, res) => {
       const result = await BlogsCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.get('/single_blog/:id', async (req, res) => {
+      const id = req?.params?.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await BlogsCollection.findOne(query)
       res.send(result)
     })
 
