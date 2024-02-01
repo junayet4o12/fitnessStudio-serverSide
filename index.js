@@ -62,14 +62,14 @@ async function run() {
 
     const clientIdstrava = 120695;
     const clientSecretstrava = '50df764cea6b288538cec244e9d45ca11c7f571d';
-    const redirectUri = 'http://localhost:5173/dashboard/connect_app';
+    const StravaRedirectUri = 'http://localhost:5173/dashboard/strava_connect';
 
     app.get('/authorizestrava', (req, res) => {
       const authorizeUrl = 'https://www.strava.com/oauth/authorize?' +
         querystring.stringify({
           response_type: 'code',
           client_id: clientIdstrava,
-          redirect_uri: redirectUri,
+          redirect_uri: StravaRedirectUri,
           scope: 'read,activity:read_all',
           state: '41c9f028be1b36f726b49e7d0d563639',
         });
@@ -92,7 +92,7 @@ async function run() {
         postData.append('client_secret', clientSecretstrava);
         postData.append('code', code);
         postData.append('grant_type', 'authorization_code');
-        postData.append('redirect_uri', redirectUri);
+        postData.append('redirect_uri', StravaRedirectUri);
         const tokenResponse = await axios.post('https://www.strava.com/oauth/token', postData);
 
         // Extract the access token from the response
@@ -211,7 +211,8 @@ async function run() {
     });
     // user end
 
-    // blogs start
+
+    // blogs start here
     app.get('/blogs', async (req, res) => {
       const result = await BlogsCollection.find().toArray()
       res.send(result)
@@ -224,6 +225,7 @@ async function run() {
       res.send(result);
     })
 
+    // using query for specific users blog show
     app.get('/my_blogs', async (req, res) => {
       const email = req.query.email;
       const query = { userEmail: email }
@@ -236,6 +238,7 @@ async function run() {
       const result = await BlogsCollection.insertOne(data);
       res.send(result);
     })
+
     app.delete('/delete_blog/:id', async (req, res) => {
       const id = req?.params?.id;
       const query = { _id: new ObjectId(id) }
@@ -257,7 +260,7 @@ async function run() {
       const result = await BlogsCollection.updateOne(query, updatedData)
       res.send(result)
     })
-    // blogs end 
+    // blogs end here
 
     // await client.connect();
     // Send a ping to confirm a successful connection
