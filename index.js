@@ -110,7 +110,7 @@ async function run() {
 
     const clientIdstrava = 120695;
     const clientSecretstrava = "50df764cea6b288538cec244e9d45ca11c7f571d";
-    const StravaRedirectUri = "http://localhost:5173/dashboard/strava_connect";
+    const StravaRedirectUri = "https://fitness-studio-project-c84aa.web.app/dashboard/strava_connect";
 
     app.get('/authorizestrava', (req, res) => {
       const authorizeUrl = 'https://www.strava.com/oauth/authorize?' +
