@@ -6,17 +6,21 @@ const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 const jwt = require('jsonwebtoken');
-const querystring = require('querystring');
 const axios = require('axios');
+const queryString = require('querystring');
+const axiosSecure = require("./axiosSecure");
+
 // middleware
 app.use(cookieParser());
 app.use(cors({
   origin: ['http://localhost:5173'],
   credentials: true,
-
+  
 }));
 app.use(express.json());
 
+const clientId = '23RMXW'
+const redirect_uri = 'http://localhost:5173/permission'
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqva6ft.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -58,6 +62,51 @@ async function run() {
     const UserGoalCollection = FitnessStudio.collection("User_Goal");
     const BlogsCollection = FitnessStudio.collection("Blogs_Collections");
 
+
+    // fitbit start
+    app.get('/authorizeFitbit', (req, res) => {
+      const authorizeUrl = 'https://www.fitbit.com/oauth2/authorize?' +
+        queryString.stringify({
+          response_type: 'code',
+          client_id: clientId,
+          redirect_uri: redirect_uri,
+          scope: 'activity profile cardio_fitness electrocardiogram heartrate location nutrition oxygen_saturation respiratory_rate settings sleep social temperature weight',
+          state: '41c9f028be1b36f726b49e7d0d563639',
+        });
+
+      res.send({ auth: authorizeUrl });
+    });
+
+    app.post('/callbackFitbit', async (req, res) => {
+      const code = req.body.exchangeCode;
+
+      console.log('exchange code', code)
+
+      const tokenUrl = 'https://api.fitbit.com/oauth2/token';
+
+
+      try {
+        const postData = new URLSearchParams();
+        postData.append('code', code);
+        postData.append('grant_type', 'authorization_code');
+        postData.append('redirect_uri', redirect_uri);
+        const tokenResponse = await axiosSecure.post(tokenUrl, postData,
+        );
+        const tokenData = tokenResponse.data;
+        console.log("token data is", tokenData)
+
+        res.send({ accessToken: tokenData })
+      } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
+    });
+
+
+
+
+    // fitbit end
+
     // strava start
 
     const clientIdstrava = 120695;
@@ -66,7 +115,7 @@ async function run() {
 
     app.get('/authorizestrava', (req, res) => {
       const authorizeUrl = 'https://www.strava.com/oauth/authorize?' +
-        querystring.stringify({
+        queryString.stringify({
           response_type: 'code',
           client_id: clientIdstrava,
           redirect_uri: StravaRedirectUri,
@@ -96,6 +145,7 @@ async function run() {
         const tokenResponse = await axios.post('https://www.strava.com/oauth/token', postData);
 
         // Extract the access token from the response
+        console.log(tokenResponse.data)
         const accessToken = tokenResponse.data.access_token;
 
         // Return the access token to the client
@@ -138,6 +188,8 @@ async function run() {
 
     // Auth related api end
 
+    // fitbit api
+
 
     // user start
     app.post("/users", async (req, res) => {
@@ -157,11 +209,24 @@ async function run() {
       const result = await UserGoalCollection.insertOne(goalInfo);
       res.send(result);
     });
-    app.get("/user_goal", async (req, res) => {
-      const result = await UserGoalCollection.find().toArray();
-      res.send(result);
-    });
 
+    app.get('/user_goal/:email', verifyToken, async (req, res) => {
+      const email = req.params.email
+      console.log(email)
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: 'forbidden' })
+      }
+      else {
+        const query = { user_email: email };
+        const result = await UserGoalCollection.find(query).toArray();
+        res.send(result)
+        app.get("/user_goal", async (req, res) => {
+          const result = await UserGoalCollection.find().toArray();
+          res.send(result);
+        });
+
+      }
+    })
 
     app.get("/users", verifyToken, async (req, res) => {
       const result = await UsersCollection.find().toArray();
@@ -226,8 +291,8 @@ async function run() {
     })
 
     // using query for specific users blog show
-    app.get('/my_blogs', async (req, res) => {
-      const email = req.query.email;
+    app.get('/my_blogs/:email', async (req, res) => {
+      const email = req.params.email;
       const query = { userEmail: email }
       const result = await BlogsCollection.find(query).toArray()
       res.send(result)
