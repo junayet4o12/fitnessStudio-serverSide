@@ -13,14 +13,14 @@ const axiosSecure = require("./axiosSecure");
 // middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: ['http://localhost:5173'],
+  origin: ['https://fitness-studio-project-c84aa.web.app'],
   credentials: true,
   
 }));
 app.use(express.json());
 
 const clientId = '23RMXW'
-const redirect_uri = 'http://localhost:5173/permission'
+const redirect_uri = 'https://fitness-studio-project-c84aa.web.app/permission'
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqva6ft.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -111,7 +111,7 @@ async function run() {
 
     const clientIdstrava = 120695;
     const clientSecretstrava = '50df764cea6b288538cec244e9d45ca11c7f571d';
-    const StravaRedirectUri = 'http://localhost:5173/dashboard/strava_connect';
+    const StravaRedirectUri = 'https://fitness-studio-project-c84aa.web.app/dashboard/strava_connect';
 
     app.get('/authorizestrava', (req, res) => {
       const authorizeUrl = 'https://www.strava.com/oauth/authorize?' +
