@@ -3,7 +3,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const app = express();
 const cookieParser = require('cookie-parser')
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 require("dotenv").config();
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
@@ -64,7 +64,7 @@ async function run() {
 
 
     // fitbit start
-    app.get('/authorize', (req, res) => {
+    app.get('/authorizeFitbit', (req, res) => {
       const authorizeUrl = 'https://www.fitbit.com/oauth2/authorize?' +
         queryString.stringify({
           response_type: 'code',
@@ -77,7 +77,7 @@ async function run() {
       res.send({ auth: authorizeUrl });
     });
 
-    app.post('/callback', async (req, res) => {
+    app.post('/callbackFitbit', async (req, res) => {
       const code = req.body.exchangeCode;
 
       console.log('exchange code', code)
@@ -145,10 +145,7 @@ async function run() {
         const tokenResponse = await axios.post('https://www.strava.com/oauth/token', postData);
 
         // Extract the access token from the response
-<<<<<<< HEAD
         console.log(tokenResponse.data)
-=======
->>>>>>> 1a9cf630cf3f522c595047c835003f91547a4a7e
         const accessToken = tokenResponse.data.access_token;
 
         // Return the access token to the client
