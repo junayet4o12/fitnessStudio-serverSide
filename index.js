@@ -5,6 +5,7 @@ const app = express();
 const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 5000;
 require("dotenv").config();
+<<<<<<< HEAD
 const jwt = require("jsonwebtoken");
 const querystring = require("querystring");
 const axios = require("axios");
@@ -18,6 +19,25 @@ app.use(
 );
 app.use(express.json());
 
+=======
+const jwt = require('jsonwebtoken');
+const axios = require('axios');
+const queryString = require('querystring');
+const axiosSecure = require("./axiosSecure");
+
+// middleware
+app.use(cookieParser());
+app.use(cors({
+  origin: ['http://localhost:5173'],
+  credentials: true,
+  
+}));
+app.use(express.json());
+
+const clientId = '23RMXW'
+const redirect_uri = 'http://localhost:5173/permission'
+
+>>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqva6ft.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -57,17 +77,69 @@ async function run() {
     const UserGoalCollection = FitnessStudio.collection("User_Goal");
     const BlogsCollection = FitnessStudio.collection("Blogs_Collections");
 
+
+    // fitbit start
+    app.get('/authorizeFitbit', (req, res) => {
+      const authorizeUrl = 'https://www.fitbit.com/oauth2/authorize?' +
+        queryString.stringify({
+          response_type: 'code',
+          client_id: clientId,
+          redirect_uri: redirect_uri,
+          scope: 'activity profile cardio_fitness electrocardiogram heartrate location nutrition oxygen_saturation respiratory_rate settings sleep social temperature weight',
+          state: '41c9f028be1b36f726b49e7d0d563639',
+        });
+
+      res.send({ auth: authorizeUrl });
+    });
+
+    app.post('/callbackFitbit', async (req, res) => {
+      const code = req.body.exchangeCode;
+
+      console.log('exchange code', code)
+
+      const tokenUrl = 'https://api.fitbit.com/oauth2/token';
+
+
+      try {
+        const postData = new URLSearchParams();
+        postData.append('code', code);
+        postData.append('grant_type', 'authorization_code');
+        postData.append('redirect_uri', redirect_uri);
+        const tokenResponse = await axiosSecure.post(tokenUrl, postData,
+        );
+        const tokenData = tokenResponse.data;
+        console.log("token data is", tokenData)
+
+        res.send({ accessToken: tokenData })
+      } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
+    });
+
+
+
+
+    // fitbit end
+
     // strava start
 
     const clientIdstrava = 120695;
     const clientSecretstrava = "50df764cea6b288538cec244e9d45ca11c7f571d";
     const StravaRedirectUri = "http://localhost:5173/dashboard/strava_connect";
 
+<<<<<<< HEAD
     app.get("/authorizestrava", (req, res) => {
       const authorizeUrl =
         "https://www.strava.com/oauth/authorize?" +
         querystring.stringify({
           response_type: "code",
+=======
+    app.get('/authorizestrava', (req, res) => {
+      const authorizeUrl = 'https://www.strava.com/oauth/authorize?' +
+        queryString.stringify({
+          response_type: 'code',
+>>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
           client_id: clientIdstrava,
           redirect_uri: StravaRedirectUri,
           scope: "read,activity:read_all",
@@ -98,6 +170,7 @@ async function run() {
         );
 
         // Extract the access token from the response
+        console.log(tokenResponse.data)
         const accessToken = tokenResponse.data.access_token;
 
         // Return the access token to the client
@@ -143,6 +216,12 @@ async function run() {
 
     // Auth related api end
 
+<<<<<<< HEAD
+=======
+    // fitbit api
+
+
+>>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
     // user start
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -160,11 +239,28 @@ async function run() {
       const result = await UserGoalCollection.insertOne(goalInfo);
       res.send(result);
     });
-    app.get("/user_goal", async (req, res) => {
-      const result = await UserGoalCollection.find().toArray();
-      res.send(result);
-    });
 
+<<<<<<< HEAD
+=======
+    app.get('/user_goal/:email', verifyToken, async (req, res) => {
+      const email = req.params.email
+      console.log(email)
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: 'forbidden' })
+      }
+      else {
+        const query = { user_email: email };
+        const result = await UserGoalCollection.find(query).toArray();
+        res.send(result)
+        app.get("/user_goal", async (req, res) => {
+          const result = await UserGoalCollection.find().toArray();
+          res.send(result);
+        });
+
+      }
+    })
+
+>>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
     app.get("/users", verifyToken, async (req, res) => {
       const result = await UsersCollection.find().toArray();
       res.send(result);
@@ -205,8 +301,8 @@ async function run() {
     });
     // user end
 
-    // blogs start
 
+<<<<<<< HEAD
     app.get("/blogs", async (req, res) => {
       const result = await BlogsCollection.find().toArray();
       res.send(result);
@@ -226,13 +322,41 @@ async function run() {
       const result = await BlogsCollection.find(email).toArray();
       res.send(result);
     });
+=======
+    // blogs start here
+    app.get('/blogs', async (req, res) => {
+      const result = await BlogsCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.get('/blogs/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await BlogsCollection.findOne(query)
+      res.send(result);
+    })
+
+    // using query for specific users blog show
+    app.get('/my_blogs/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { userEmail: email }
+      const result = await BlogsCollection.find(query).toArray()
+      res.send(result)
+    })
+>>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
 
     app.post("/post_blog", async (req, res) => {
       const data = req?.body;
       const result = await BlogsCollection.insertOne(data);
       res.send(result);
+<<<<<<< HEAD
     });
     app.delete("/delete_blog/:id", async (req, res) => {
+=======
+    })
+
+    app.delete('/delete_blog/:id', async (req, res) => {
+>>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
       const id = req?.params?.id;
       const query = { _id: new ObjectId(id) };
       const result = await BlogsCollection.deleteOne(query);
@@ -247,6 +371,7 @@ async function run() {
         $set: {
           blogDes: data?.blogDes,
           blogImg: data?.blogImg,
+<<<<<<< HEAD
           blogName: data?.blogName,
         },
       };
@@ -254,6 +379,15 @@ async function run() {
       res.send(result);
     });
     // blogs end
+=======
+          blogName: data?.blogName
+        }
+      }
+      const result = await BlogsCollection.updateOne(query, updatedData)
+      res.send(result)
+    })
+    // blogs end here
+>>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
 
     // await client.connect();
     // Send a ping to confirm a successful connection
