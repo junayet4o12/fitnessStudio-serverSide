@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const queryString = require('querystring');
 const axiosSecure = require("./axiosSecure");
-
+const frontendUrl = 'http://localhost:5173'
 // middlewareee
 app.use(cookieParser());
 app.use(cors({
