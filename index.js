@@ -5,39 +5,26 @@ const app = express();
 const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 5000;
 require("dotenv").config();
-<<<<<<< HEAD
-const jwt = require("jsonwebtoken");
-const querystring = require("querystring");
-const axios = require("axios");
-// middleware
-app.use(cookieParser());
-app.use(
-  cors({
-    origin: ["http://localhost:5173"],
-    credentials: true,
-  })
-);
-app.use(express.json());
-
-=======
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const queryString = require('querystring');
 const axiosSecure = require("./axiosSecure");
 
-// middleware
+// middlewareeeeeeeee
 app.use(cookieParser());
 app.use(cors({
   origin: ['http://localhost:5173'],
   credentials: true,
   
 }));
+
+
+
 app.use(express.json());
 
 const clientId = '23RMXW'
 const redirect_uri = 'http://localhost:5173/permission'
 
->>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqva6ft.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -128,18 +115,10 @@ async function run() {
     const clientSecretstrava = "50df764cea6b288538cec244e9d45ca11c7f571d";
     const StravaRedirectUri = "http://localhost:5173/dashboard/strava_connect";
 
-<<<<<<< HEAD
-    app.get("/authorizestrava", (req, res) => {
-      const authorizeUrl =
-        "https://www.strava.com/oauth/authorize?" +
-        querystring.stringify({
-          response_type: "code",
-=======
     app.get('/authorizestrava', (req, res) => {
       const authorizeUrl = 'https://www.strava.com/oauth/authorize?' +
         queryString.stringify({
           response_type: 'code',
->>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
           client_id: clientIdstrava,
           redirect_uri: StravaRedirectUri,
           scope: "read,activity:read_all",
@@ -216,12 +195,9 @@ async function run() {
 
     // Auth related api end
 
-<<<<<<< HEAD
-=======
     // fitbit api
 
 
->>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
     // user start
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -240,8 +216,6 @@ async function run() {
       res.send(result);
     });
 
-<<<<<<< HEAD
-=======
     app.get('/user_goal/:email', verifyToken, async (req, res) => {
       const email = req.params.email
       console.log(email)
@@ -260,7 +234,6 @@ async function run() {
       }
     })
 
->>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
     app.get("/users", verifyToken, async (req, res) => {
       const result = await UsersCollection.find().toArray();
       res.send(result);
@@ -302,27 +275,6 @@ async function run() {
     // user end
 
 
-<<<<<<< HEAD
-    app.get("/blogs", async (req, res) => {
-      const result = await BlogsCollection.find().toArray();
-      res.send(result);
-    });
-
-    app.get("/single_blog/:id", async (req, res) => {
-      const id = req?.params?.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await BlogsCollection.findOne(query);
-      res.send(result);
-    });
-
-    app.get("/my_blogs/:email", async (req, res) => {
-      const email = req.params.email;
-      const query = { email: email };
-      console.log(query);
-      const result = await BlogsCollection.find(email).toArray();
-      res.send(result);
-    });
-=======
     // blogs start here
     app.get('/blogs', async (req, res) => {
       const result = await BlogsCollection.find().toArray()
@@ -343,20 +295,14 @@ async function run() {
       const result = await BlogsCollection.find(query).toArray()
       res.send(result)
     })
->>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
 
     app.post("/post_blog", async (req, res) => {
       const data = req?.body;
       const result = await BlogsCollection.insertOne(data);
       res.send(result);
-<<<<<<< HEAD
-    });
-    app.delete("/delete_blog/:id", async (req, res) => {
-=======
     })
 
     app.delete('/delete_blog/:id', async (req, res) => {
->>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
       const id = req?.params?.id;
       const query = { _id: new ObjectId(id) };
       const result = await BlogsCollection.deleteOne(query);
@@ -371,15 +317,6 @@ async function run() {
         $set: {
           blogDes: data?.blogDes,
           blogImg: data?.blogImg,
-<<<<<<< HEAD
-          blogName: data?.blogName,
-        },
-      };
-      const result = await BlogsCollection.updateOne(query, updatedData);
-      res.send(result);
-    });
-    // blogs end
-=======
           blogName: data?.blogName
         }
       }
@@ -387,7 +324,6 @@ async function run() {
       res.send(result)
     })
     // blogs end here
->>>>>>> 271d413b132f545ce4a662a7e36a9cc6901cdd42
 
     // await client.connect();
     // Send a ping to confirm a successful connection
