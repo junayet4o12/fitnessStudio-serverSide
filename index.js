@@ -9,18 +9,21 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const queryString = require('querystring');
 const axiosSecure = require("./axiosSecure");
-
-// middleware
+const frontendUrl = 'http://localhost:5173'
+// middlewareee
 app.use(cookieParser());
 app.use(cors({
-  origin: ['http://localhost:5173'],
+  origin: [frontendUrl],
   credentials: true,
   
 }));
+
+
+
 app.use(express.json());
 
 const clientId = '23RMXW'
-const redirect_uri = 'http://localhost:5173/permission'
+const redirect_uri = `${frontendUrl}/permission`
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqva6ft.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -110,7 +113,7 @@ async function run() {
 
     const clientIdstrava = 120695;
     const clientSecretstrava = "50df764cea6b288538cec244e9d45ca11c7f571d";
-    const StravaRedirectUri = "http://localhost:5173/dashboard/strava_connect";
+    const StravaRedirectUri = `${frontendUrl}/dashboard/strava_connect`;
 
     app.get('/authorizestrava', (req, res) => {
       const authorizeUrl = 'https://www.strava.com/oauth/authorize?' +
@@ -178,8 +181,8 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
-          sameSite: "Lax",
+          secure: true,
+          sameSite: "None",
         })
         .send({ setToken: "success" });
     });
