@@ -54,6 +54,8 @@ const verifyToken = async (req, res, next) => {
   });
 };
 
+
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -62,6 +64,21 @@ async function run() {
     const UsersCollection = FitnessStudio.collection("Users");
     const UserGoalCollection = FitnessStudio.collection("User_Goal");
     const BlogsCollection = FitnessStudio.collection("Blogs_Collections");
+
+
+    // verify Admin  start
+    const verifyadmin = async (req, res, next) => {
+      const email = req?.user?.email;
+      const query = { email: email };
+      const user = await UsersCollection.findOne(query);
+      const isadmin = user?.admin === true
+      if (!isadmin) {
+        return res.status(403).send({ message: "forbidden" })
+      }
+
+      next()
+    }
+    // verify Admin end 
 
     // fitbit start
     app.get("/authorizeFitbit", (req, res) => {
@@ -251,7 +268,6 @@ async function run() {
         return res.status(403).send({ message: "forbidden" });
       } else {
         const query = { email: email };
-        console.log(data);
         const updatedData = {
           $set: {
             name: data?.name,
@@ -266,6 +282,21 @@ async function run() {
       }
     });
     // user end
+    // admin start
+    app.get('/admin/:email', verifyToken,  async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: 'forbidden' })
+      }
+      const query = { email: email }
+      const user = await UsersCollection.findOne(query)
+      let admin = false
+      if (user) {
+        admin = user?.admin === true
+      }
+      res.send({ admin })
+    })
+    // admin end
 
     // blogs start here
     app.get("/blogs", async (req, res) => {
