@@ -284,8 +284,21 @@ async function run() {
           blogName: {$regex: search, $options:"i"}
         }
       }
-      const result = await BlogsCollection.find(query).toArray()
+
+      const page = parseInt(req.query.page)
+      const size = parseInt(req.query.size)
+      console.log(page);
+      console.log(size);
+      const result = await BlogsCollection.find(query)
+      .skip(page * size)
+      .limit(size)
+      .toArray()
       res.send(result)
+    })
+
+    app.get("/blogcount", async(req, res)=>{
+      const count = await BlogsCollection.estimatedDocumentCount()
+      res.send({count})
     })
 
     app.get('/blogs/:id', async (req, res) => {
