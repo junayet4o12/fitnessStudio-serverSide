@@ -9,11 +9,11 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const queryString = require('querystring');
 const axiosSecure = require("./axiosSecure");
-
-// middlewareee
+const frontendUrl = 'http://localhost:5173'
+// middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: [frontendUrl],
+  origin: ["http://localhost:5173"],
   credentials: true,
   
 }));
@@ -23,7 +23,7 @@ app.use(cors({
 app.use(express.json());
 
 const clientId = '23RMXW'
-const redirect_uri = `${frontendUrl}/permission`
+const redirect_uri = "http://localhost:5173/permission"
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqva6ft.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -107,7 +107,7 @@ async function run() {
 
 
 
-    // fitbit end
+    // fitbit end...........
 
     // strava start
 
