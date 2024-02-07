@@ -5,25 +5,24 @@ const app = express();
 const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 5000;
 require("dotenv").config();
-const jwt = require('jsonwebtoken');
-const axios = require('axios');
-const queryString = require('querystring');
+const jwt = require("jsonwebtoken");
+const axios = require("axios");
+const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
-const frontendUrl = 'http://localhost:5173'
+const frontendUrl = "http://localhost:5173";
 // middlewareee
 app.use(cookieParser());
-app.use(cors({
-  origin: [frontendUrl],
-  credentials: true,
-
-}));
-
-
+app.use(
+  cors({
+    origin: [frontendUrl],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
-const clientId = '23RMXW'
-const redirect_uri = `${frontendUrl}/permission`
+const clientId = "23RMXW";
+const redirect_uri = `${frontendUrl}/permission`;
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqva6ft.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -82,48 +81,45 @@ async function run() {
     // verify Admin end 
 
     // fitbit start
-    app.get('/authorizeFitbit', (req, res) => {
-      const authorizeUrl = 'https://www.fitbit.com/oauth2/authorize?' +
+    app.get("/authorizeFitbit", (req, res) => {
+      const authorizeUrl =
+        "https://www.fitbit.com/oauth2/authorize?" +
         queryString.stringify({
-          response_type: 'code',
+          response_type: "code",
           client_id: clientId,
           redirect_uri: redirect_uri,
-          scope: 'activity profile cardio_fitness electrocardiogram heartrate location nutrition oxygen_saturation respiratory_rate settings sleep social temperature weight',
-          state: '41c9f028be1b36f726b49e7d0d563639',
+          scope:
+            "activity profile cardio_fitness electrocardiogram heartrate location nutrition oxygen_saturation respiratory_rate settings sleep social temperature weight",
+          state: "41c9f028be1b36f726b49e7d0d563639",
         });
 
       res.send({ auth: authorizeUrl });
     });
 
-    app.post('/callbackFitbit', async (req, res) => {
+    app.post("/callbackFitbit", async (req, res) => {
       const code = req.body.exchangeCode;
 
-      console.log('exchange code', code)
+      console.log("exchange code", code);
 
-      const tokenUrl = 'https://api.fitbit.com/oauth2/token';
-
+      const tokenUrl = "https://api.fitbit.com/oauth2/token";
 
       try {
         const postData = new URLSearchParams();
-        postData.append('code', code);
-        postData.append('grant_type', 'authorization_code');
-        postData.append('redirect_uri', redirect_uri);
-        const tokenResponse = await axiosSecure.post(tokenUrl, postData,
-        );
+        postData.append("code", code);
+        postData.append("grant_type", "authorization_code");
+        postData.append("redirect_uri", redirect_uri);
+        const tokenResponse = await axiosSecure.post(tokenUrl, postData);
         const tokenData = tokenResponse.data;
-        console.log("token data is", tokenData)
+        console.log("token data is", tokenData);
 
-        res.send({ accessToken: tokenData })
+        res.send({ accessToken: tokenData });
       } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error("Error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
       }
     });
 
-
-
-
-    // fitbit end
+    // fitbit end...........
 
     // strava start
 
@@ -131,10 +127,11 @@ async function run() {
     const clientSecretstrava = "50df764cea6b288538cec244e9d45ca11c7f571d";
     const StravaRedirectUri = `${frontendUrl}/dashboard/strava_connect`;
 
-    app.get('/authorizestrava', (req, res) => {
-      const authorizeUrl = 'https://www.strava.com/oauth/authorize?' +
+    app.get("/authorizestrava", (req, res) => {
+      const authorizeUrl =
+        "https://www.strava.com/oauth/authorize?" +
         queryString.stringify({
-          response_type: 'code',
+          response_type: "code",
           client_id: clientIdstrava,
           redirect_uri: StravaRedirectUri,
           scope: "read,activity:read_all",
@@ -165,7 +162,7 @@ async function run() {
         );
 
         // Extract the access token from the response
-        console.log(tokenResponse.data)
+        console.log(tokenResponse.data);
         const accessToken = tokenResponse.data.access_token;
 
         // Return the access token to the client
@@ -213,7 +210,6 @@ async function run() {
 
     // fitbit api
 
-
     // user start
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -232,23 +228,21 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/user_goal/:email', verifyToken, async (req, res) => {
-      const email = req.params.email
-      console.log(email)
+    app.get("/user_goal/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      console.log(email);
       if (email !== req.user.email) {
-        return res.status(403).send({ message: 'forbidden' })
-      }
-      else {
+        return res.status(403).send({ message: "forbidden" });
+      } else {
         const query = { user_email: email };
         const result = await UserGoalCollection.find(query).toArray();
-        res.send(result)
+        res.send(result);
         app.get("/user_goal", async (req, res) => {
           const result = await UserGoalCollection.find().toArray();
           res.send(result);
         });
-
       }
-    })
+    });
 
     app.get("/users", verifyToken, async (req, res) => {
       const result = await UsersCollection.find().toArray();
@@ -305,33 +299,40 @@ async function run() {
     // admin end
 
     // blogs start here
-    app.get('/blogs', async (req, res) => {
-      const result = await BlogsCollection.find().toArray()
-      res.send(result)
-    })
+    app.get("/blogs", async (req, res) => {
+      const search = req.query.search;
+      let query = {};
+      if (req.query.search) {
+        query = {
+          blogName: { $regex: search, $options: "i" },
+        };
+      }
+      const result = await BlogsCollection.find(query).toArray();
+      res.send(result);
+    });
 
-    app.get('/blogs/:id', async (req, res) => {
+    app.get("/blogs/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await BlogsCollection.findOne(query)
+      const result = await BlogsCollection.findOne(query);
       res.send(result);
-    })
+    });
 
     // using query for specific users blog show
-    app.get('/my_blogs/:email', async (req, res) => {
+    app.get("/my_blogs/:email", async (req, res) => {
       const email = req.params.email;
-      const query = { userEmail: email }
-      const result = await BlogsCollection.find(query).toArray()
-      res.send(result)
-    })
+      const query = { userEmail: email };
+      const result = await BlogsCollection.find(query).toArray();
+      res.send(result);
+    });
 
     app.post("/post_blog", async (req, res) => {
       const data = req?.body;
       const result = await BlogsCollection.insertOne(data);
       res.send(result);
-    })
+    });
 
-    app.delete('/delete_blog/:id', async (req, res) => {
+    app.delete("/delete_blog/:id", async (req, res) => {
       const id = req?.params?.id;
       const query = { _id: new ObjectId(id) };
       const result = await BlogsCollection.deleteOne(query);
@@ -346,12 +347,12 @@ async function run() {
         $set: {
           blogDes: data?.blogDes,
           blogImg: data?.blogImg,
-          blogName: data?.blogName
-        }
-      }
-      const result = await BlogsCollection.updateOne(query, updatedData)
-      res.send(result)
-    })
+          blogName: data?.blogName,
+        },
+      };
+      const result = await BlogsCollection.updateOne(query, updatedData);
+      res.send(result);
+    });
     // blogs end here
 
     // await client.connect();
