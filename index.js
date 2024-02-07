@@ -9,13 +9,14 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const queryString = require('querystring');
 const axiosSecure = require("./axiosSecure");
-const frontendUrl = 'http://localhost:5173'
+const frontendUrl = "http://localhost:5173";
+
 // middlewareee
 app.use(cookieParser());
 app.use(cors({
   origin: [frontendUrl],
   credentials: true,
-  
+
 }));
 
 
@@ -238,6 +239,25 @@ async function run() {
       const result = await UsersCollection.find().toArray();
       res.send(result);
     });
+
+    // user update user to admin
+    app.patch('/users/admin/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: { role: 'admin' }
+      }
+      const result = await UsersCollection.updateOne(filter, updatedDoc);
+      res.send(result)
+    })
+
+    // Users Delete
+    app.delete('/users/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await UsersCollection.deleteOne(query);
+      res.send(result);
+    })
 
     app.get("/users/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
