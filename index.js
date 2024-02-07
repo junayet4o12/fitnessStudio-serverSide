@@ -277,7 +277,14 @@ async function run() {
 
     // blogs start here
     app.get('/blogs', async (req, res) => {
-      const result = await BlogsCollection.find().toArray()
+      const search = req.query.search
+      let query = {}
+      if (req.query.search) {
+        query = {
+          blogName: {$regex: search, $options:"i"}
+        }
+      }
+      const result = await BlogsCollection.find(query).toArray()
       res.send(result)
     })
 
