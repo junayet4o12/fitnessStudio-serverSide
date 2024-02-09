@@ -245,9 +245,27 @@ async function run() {
     });
 
     app.get("/users", verifyToken, async (req, res) => {
-      const result = await UsersCollection.find().toArray();
+      const name = req.query.name
+      const page = req.query.page
+      const size = req.query.size
+      let query ={}
+      if(req.query.name){
+        query = {
+          name: {$regex: name, $options: "i"}
+        }
+      }
+      const result = await UsersCollection
+      .find(query)
+      .skip(parseInt(size * page))
+      .limit(parseInt(size))
+      .toArray();
       res.send(result);
     });
+
+    app.get('/usersCount', verifyToken, async(req, res)=>{
+      const count = await UsersCollection.estimatedDocumentCount()
+      res.send({count})
+    })
 
     // user update user to admin
     // make admin
@@ -261,6 +279,23 @@ async function run() {
         const updatedRole = {
           $set: {
             role: "Admin",
+          },
+        };
+        const result = await UsersCollection.updateOne(query, updatedRole);
+        res.send(result);
+      }
+    );
+    // make admin to user
+    app.put(
+      "/make-user/:email",
+      verifyToken,
+      verifyadmin,
+      async (req, res) => {
+        const email = req.params.email;
+        const query = { email: email };
+        const updatedRole = {
+          $set: {
+            role: "user",
           },
         };
         const result = await UsersCollection.updateOne(query, updatedRole);
