@@ -354,6 +354,7 @@ async function run() {
             weight: data?.weight,
             height: data?.height,
             gender: data?.gender,
+            bio: data?.bio,
           },
         };
         const result = await UsersCollection.updateOne(query, updatedData);
