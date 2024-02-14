@@ -248,23 +248,34 @@ async function run() {
       const name = req.query.name
       const page = req.query.page
       const size = req.query.size
-      let query ={}
-      if(req.query.name){
+      let query = {}
+      if (req.query.name) {
         query = {
-          name: {$regex: name, $options: "i"}
+          name: { $regex: name, $options: "i" }
         }
       }
       const result = await UsersCollection
-      .find(query)
-      .skip(parseInt(size * page))
-      .limit(parseInt(size))
-      .toArray();
+        .find(query)
+        .skip(parseInt(size * page))
+        .limit(parseInt(size))
+        .toArray();
       res.send(result);
     });
+    app.get("/search_people/:name", verifyToken, async (req, res) => {
+      const name = req.params.name
+      let query = {}
+      if (req.params.name) {
+        query = {
+          name: { $regex: name, $options: "i" }
+        }
+      }
 
-    app.get('/usersCount', verifyToken, async(req, res)=>{
+      const result = await UsersCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.get('/usersCount', verifyToken, async (req, res) => {
       const count = await UsersCollection.estimatedDocumentCount()
-      res.send({count})
+      res.send({ count })
     })
 
     // user update user to admin
@@ -311,9 +322,19 @@ async function run() {
       res.send(result);
     })
 
+    app.get('/user', async(req, res)=>{
+      const email = req.query.email
+      let query ={}
+      if (email) {
+        query = {email: email}
+      }
+      const result = await UsersCollection.findOne(query)
+      res.send(result)
+    })
+
     app.get("/users/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
-
+      
       if (email !== req.user.email) {
         return res.status(403).send({ message: "forbidden" });
       } else {
@@ -322,6 +343,12 @@ async function run() {
         res.send(result);
       }
     });
+    app.get('/single_user/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await UsersCollection.findOne(query);
+      res.send(result)
+    })
 
     app.put("/update_user_data/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -345,7 +372,7 @@ async function run() {
     });
     // user end
     // admin start
-    app.get('/admin/:email', verifyToken,  async (req, res) => {
+    app.get('/admin/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       if (email !== req.user.email) {
         return res.status(403).send({ message: 'forbidden' })
@@ -375,15 +402,15 @@ async function run() {
       console.log(page);
       console.log(size);
       const result = await BlogsCollection.find(query)
-      .skip(page * size)
-      .limit(size)
-      .toArray();
+        .skip(page * size)
+        .limit(size)
+        .toArray();
       res.send(result);
     });
 
-    app.get("/blogcount", async(req, res)=>{
+    app.get("/blogcount", async (req, res) => {
       const count = await BlogsCollection.estimatedDocumentCount()
-      res.send({count})
+      res.send({ count })
     })
 
     app.get("/blogs/:id", async (req, res) => {
@@ -429,6 +456,43 @@ async function run() {
       res.send(result);
     });
     // blogs end here
+
+    // connecting people start
+    app.put('/following/:id', async (req, res) => {
+      const data = req?.body
+      const followingId = req?.params?.id;
+      const followedId = data?._id;
+      // following peopleId 
+      const query1 = { _id: new ObjectId(followingId) }
+      // followed people id 
+      const query2 = { _id: new ObjectId(followedId) }
+      console.log(query1, query2);
+      // updated in following backend 
+      const updatedFollowing = {
+        $push: { following: followedId }
+      };
+      // updated in  followed backend
+      const updatedFollowed = {
+        $push: { followed: followingId }
+      };
+      // result for following 
+      const followingResult = await UsersCollection.updateOne(query1, updatedFollowing)
+      // result for followed
+      const followedResult = await UsersCollection.updateOne(query2, updatedFollowed)
+      res.send({ followingResult, followedResult })
+    })
+    app.get('/get_following_and_follower/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await UsersCollection.findOne(query);
+      const followingId = (result?.following || []).map(id => new ObjectId(id));
+      const followedId = (result?.followed || []).map(id => new ObjectId(id));
+      const followingMembers = await UsersCollection.find({ _id: { $in: followingId } }).toArray()
+      const followedMembers = await UsersCollection.find({ _id: { $in: followedId } }).toArray()
+      // console.log(followingMembers,followedMembers);
+      res.send({ followingMembers, followedMembers })
+    })
+    // connecting people end
 
     // await client.connect();
     // Send a ping to confirm a successful connection
