@@ -228,21 +228,26 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/user_goal/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-      console.log(email);
-      if (email !== req.user.email) {
-        return res.status(403).send({ message: "forbidden" });
-      } else {
-        const query = { user_email: email };
-        const result = await UserGoalCollection.find(query).toArray();
-        res.send(result);
-        app.get("/user_goal", async (req, res) => {
-          const result = await UserGoalCollection.find().toArray();
-          res.send(result);
-        });
-      }
+    app.get("/user_goal", async (req, res) => {
+      const result = await UserGoalCollection.find().toArray();
+      res.send(result);
     });
+
+    // app.get("/user_goal/:email", verifyToken, async (req, res) => {
+    //   const email = req.params.email;
+    //   console.log(email);
+    //   if (email !== req.user.email) {
+    //     return res.status(403).send({ message: "forbidden" });
+    //   } else {
+    //     const query = { user_email: email };
+    //     const result = await UserGoalCollection.find(query).toArray();
+    //     res.send(result);
+    //     app.get("/user_goal", async (req, res) => {
+    //       const result = await UserGoalCollection.find().toArray();
+    //       res.send(result);
+    //     });
+    //   }
+    // });
 
     app.get("/users", verifyToken, async (req, res) => {
       const name = req.query.name
@@ -354,6 +359,7 @@ async function run() {
             weight: data?.weight,
             height: data?.height,
             gender: data?.gender,
+            bio: data?.bio,
           },
         };
         const result = await UsersCollection.updateOne(query, updatedData);
@@ -470,6 +476,27 @@ async function run() {
       // result for followed
       const followedResult = await UsersCollection.updateOne(query2, updatedFollowed)
       res.send({ followingResult, followedResult })
+    })
+    app.put('/unfollowing/:id', async (req, res) => {
+      const data = req?.body
+      const followingId = req?.params?.id;
+      const followedId = data?._id;
+      // following peopleId 
+      const query1 = { _id: new ObjectId(followingId) }
+      // followed people id 
+      const query2 = { _id: new ObjectId(followedId) }
+      console.log(query1, query2);
+      const removeFromFollowing = {
+        $pull: { following: followedId } 
+      };
+      const removeFromFollowed = {
+        $pull: { followed: followingId } 
+      };
+      // result for following 
+      const unfollowingResult = await UsersCollection.updateOne(query1, removeFromFollowing)
+      // result for followed
+      const unfollowedResult = await UsersCollection.updateOne(query2, removeFromFollowed)
+      res.send({ unfollowingResult, unfollowedResult })
     })
     app.get('/get_following_and_follower/:email', async (req, res) => {
       const email = req.params.email;
