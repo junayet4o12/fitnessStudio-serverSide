@@ -9,7 +9,7 @@ const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
-const frontendUrl = "https://fitness-studio.surge.sh";
+const frontendUrl = "http://localhost:5173";
 // middlewareee
 app.use(cookieParser());
 app.use(
@@ -194,8 +194,8 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: true,
-          sameSite: "None",
+          secure: false,
+          sameSite: "Lax",
         })
         .send({ setToken: "success" });
     });
