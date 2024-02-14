@@ -228,21 +228,26 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/user_goal/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-      console.log(email);
-      if (email !== req.user.email) {
-        return res.status(403).send({ message: "forbidden" });
-      } else {
-        const query = { user_email: email };
-        const result = await UserGoalCollection.find(query).toArray();
-        res.send(result);
-        app.get("/user_goal", async (req, res) => {
-          const result = await UserGoalCollection.find().toArray();
-          res.send(result);
-        });
-      }
+    app.get("/user_goal", async (req, res) => {
+      const result = await UserGoalCollection.find().toArray();
+      res.send(result);
     });
+
+    // app.get("/user_goal/:email", verifyToken, async (req, res) => {
+    //   const email = req.params.email;
+    //   console.log(email);
+    //   if (email !== req.user.email) {
+    //     return res.status(403).send({ message: "forbidden" });
+    //   } else {
+    //     const query = { user_email: email };
+    //     const result = await UserGoalCollection.find(query).toArray();
+    //     res.send(result);
+    //     app.get("/user_goal", async (req, res) => {
+    //       const result = await UserGoalCollection.find().toArray();
+    //       res.send(result);
+    //     });
+    //   }
+    // });
 
     app.get("/users", verifyToken, async (req, res) => {
       const name = req.query.name
@@ -250,11 +255,18 @@ async function run() {
       const size = req.query.size
       let query = {}
       if (req.query.name) {
+      let query = {}
+      if (req.query.name) {
         query = {
+          name: { $regex: name, $options: "i" }
           name: { $regex: name, $options: "i" }
         }
       }
       const result = await UsersCollection
+        .find(query)
+        .skip(parseInt(size * page))
+        .limit(parseInt(size))
+        .toArray();
         .find(query)
         .skip(parseInt(size * page))
         .limit(parseInt(size))
@@ -274,7 +286,21 @@ async function run() {
       res.send(result);
     });
     app.get('/usersCount', verifyToken, async (req, res) => {
+    app.get("/search_people/:name", verifyToken, async (req, res) => {
+      const name = req.params.name
+      let query = {}
+      if (req.params.name) {
+        query = {
+          name: { $regex: name, $options: "i" }
+        }
+      }
+
+      const result = await UsersCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.get('/usersCount', verifyToken, async (req, res) => {
       const count = await UsersCollection.estimatedDocumentCount()
+      res.send({ count })
       res.send({ count })
     })
 
@@ -349,6 +375,12 @@ async function run() {
       const result = await UsersCollection.findOne(query);
       res.send(result)
     })
+    app.get('/single_user/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await UsersCollection.findOne(query);
+      res.send(result)
+    })
 
     app.put("/update_user_data/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -364,6 +396,7 @@ async function run() {
             weight: data?.weight,
             height: data?.height,
             gender: data?.gender,
+            bio: data?.bio,
           },
         };
         const result = await UsersCollection.updateOne(query, updatedData);
@@ -372,6 +405,7 @@ async function run() {
     });
     // user end
     // admin start
+    app.get('/admin/:email', verifyToken, async (req, res) => {
     app.get('/admin/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       if (email !== req.user.email) {
@@ -405,11 +439,16 @@ async function run() {
         .skip(page * size)
         .limit(size)
         .toArray();
+        .skip(page * size)
+        .limit(size)
+        .toArray();
       res.send(result);
     });
 
     app.get("/blogcount", async (req, res) => {
+    app.get("/blogcount", async (req, res) => {
       const count = await BlogsCollection.estimatedDocumentCount()
+      res.send({ count })
       res.send({ count })
     })
 
