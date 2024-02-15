@@ -249,6 +249,18 @@ async function run() {
     //   }
     // });
 
+    app.get("/user", async (req, res) => {
+      const email = req.query.email;
+      let query = {};
+    
+      if (req.query.email) { 
+        query = { email: email };
+      }
+    
+      const result = await UsersCollection.findOne(query);
+      res.send(result);
+    });
+    
     app.get("/users", verifyToken, async (req, res) => {
       const name = req.query.name
       const page = req.query.page
