@@ -2,6 +2,7 @@ const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const app = express();
+
 const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 5000;
 require("dotenv").config();
@@ -10,6 +11,36 @@ const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const frontendUrl = "http://localhost:5173";
+// socketio connect  start
+const socketIo = require('socket.io')
+const http = require('http')
+const server = http.createServer(app)
+const io = socketIo(server, {
+  cors: {
+    origin: frontendUrl, 
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+})
+
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  // Handle incoming messages
+  socket.on('message', (message) => {
+    console.log('Message received:', message);
+    // Broadcast the message to all connected clients
+    io.emit('message', message);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+});
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
+// socketio connect  end
 // middlewareee
 app.use(cookieParser());
 app.use(
@@ -53,6 +84,7 @@ const verifyToken = async (req, res, next) => {
     }
   });
 };
+
 
 
 
@@ -121,7 +153,7 @@ async function run() {
 
     // fitbit end...........
 
-    // strava start
+    // strava started
 
     const clientIdstrava = 120695;
     const clientSecretstrava = "50df764cea6b288538cec244e9d45ca11c7f571d";
@@ -228,27 +260,36 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/user_goal", async (req, res) => {
-      const result = await UserGoalCollection.find().toArray();
-      res.send(result);
+  
+
+    app.get("/user_goal/:email",  async (req, res) => {
+      const email = req.params.email;
+      console.log(email);
+      // if (email !== req.user.email) {
+      //   return res.status(403).send({ message: "forbidden" });
+      // } else {
+        const query = { user_email: email };
+        const result = await UserGoalCollection.find(query).toArray();
+        res.send(result);
+        app.get("/user_goal", async (req, res) => {
+          const result = await UserGoalCollection.find().toArray();
+          res.send(result);
+        });
+      
     });
 
-    // app.get("/user_goal/:email", verifyToken, async (req, res) => {
-    //   const email = req.params.email;
-    //   console.log(email);
-    //   if (email !== req.user.email) {
-    //     return res.status(403).send({ message: "forbidden" });
-    //   } else {
-    //     const query = { user_email: email };
-    //     const result = await UserGoalCollection.find(query).toArray();
-    //     res.send(result);
-    //     app.get("/user_goal", async (req, res) => {
-    //       const result = await UserGoalCollection.find().toArray();
-    //       res.send(result);
-    //     });
-    //   }
-    // });
-
+    app.get("/user", async (req, res) => {
+      const email = req.query.email;
+      let query = {};
+    
+      if (req.query.email) { 
+        query = { email: email };
+      }
+    
+      const result = await UsersCollection.findOne(query);
+      res.send(result);
+    });
+    
     app.get("/users", verifyToken, async (req, res) => {
       const name = req.query.name
       const page = req.query.page
@@ -487,10 +528,10 @@ async function run() {
       const query2 = { _id: new ObjectId(followedId) }
       console.log(query1, query2);
       const removeFromFollowing = {
-        $pull: { following: followedId } 
+        $pull: { following: followedId }
       };
       const removeFromFollowed = {
-        $pull: { followed: followingId } 
+        $pull: { followed: followingId }
       };
       // result for following 
       const unfollowingResult = await UsersCollection.updateOne(query1, removeFromFollowing)
@@ -528,6 +569,3 @@ app.get("/", (req, res) => {
   res.send("Fitness is running...");
 });
 
-app.listen(port, () => {
-  console.log(`Fitness are Running on port ${port}`);
-});
