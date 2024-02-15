@@ -5,7 +5,6 @@ const app = express();
 
 const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 5000;
-const PORT = process.env.PORT || 4000;
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
@@ -38,8 +37,8 @@ io.on('connection', (socket) => {
     console.log('User disconnected');
   });
 });
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
 // socketio connect  end
 // middlewareee
@@ -573,6 +572,3 @@ app.get("/", (req, res) => {
   res.send("Fitness is running...");
 });
 
-app.listen(port, () => {
-  console.log(`Fitness are Running on port ${port}`);
-});
