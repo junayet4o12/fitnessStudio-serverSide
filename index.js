@@ -154,7 +154,7 @@ async function run() {
 
     // fitbit end...........
 
-    // strava start
+    // strava started
 
     const clientIdstrava = 120695;
     const clientSecretstrava = "50df764cea6b288538cec244e9d45ca11c7f571d";
