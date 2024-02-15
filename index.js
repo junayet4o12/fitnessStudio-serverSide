@@ -2,14 +2,46 @@ const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const app = express();
+
 const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const frontendUrl = "http://localhost:5173";
+// socketio connect  start
+const socketIo = require('socket.io')
+const http = require('http')
+const server = http.createServer(app)
+const io = socketIo(server, {
+  cors: {
+    origin: frontendUrl, 
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+})
+
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  // Handle incoming messages
+  socket.on('message', (message) => {
+    console.log('Message received:', message);
+    // Broadcast the message to all connected clients
+    io.emit('message', message);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+});
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+// socketio connect  end
 // middlewareee
 app.use(cookieParser());
 app.use(
@@ -53,6 +85,7 @@ const verifyToken = async (req, res, next) => {
     }
   });
 };
+
 
 
 
@@ -482,10 +515,10 @@ async function run() {
       const query2 = { _id: new ObjectId(followedId) }
       console.log(query1, query2);
       const removeFromFollowing = {
-        $pull: { following: followedId } 
+        $pull: { following: followedId }
       };
       const removeFromFollowed = {
-        $pull: { followed: followingId } 
+        $pull: { followed: followingId }
       };
       // result for following 
       const unfollowingResult = await UsersCollection.updateOne(query1, removeFromFollowing)
