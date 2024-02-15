@@ -261,22 +261,39 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/user_goal/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-      console.log(email);
-      if (email !== req.user.email) {
-        return res.status(403).send({ message: "forbidden" });
-      } else {
-        const query = { user_email: email };
-        const result = await UserGoalCollection.find(query).toArray();
-        res.send(result);
-        app.get("/user_goal", async (req, res) => {
-          const result = await UserGoalCollection.find().toArray();
-          res.send(result);
-        });
-      }
+    app.get("/user_goal", async (req, res) => {
+      const result = await UserGoalCollection.find().toArray();
+      res.send(result);
     });
 
+    // app.get("/user_goal/:email", verifyToken, async (req, res) => {
+    //   const email = req.params.email;
+    //   console.log(email);
+    //   if (email !== req.user.email) {
+    //     return res.status(403).send({ message: "forbidden" });
+    //   } else {
+    //     const query = { user_email: email };
+    //     const result = await UserGoalCollection.find(query).toArray();
+    //     res.send(result);
+    //     app.get("/user_goal", async (req, res) => {
+    //       const result = await UserGoalCollection.find().toArray();
+    //       res.send(result);
+    //     });
+    //   }
+    // });
+
+    app.get("/user", async (req, res) => {
+      const email = req.query.email;
+      let query = {};
+    
+      if (req.query.email) { 
+        query = { email: email };
+      }
+    
+      const result = await UsersCollection.findOne(query);
+      res.send(result);
+    });
+    
     app.get("/users", verifyToken, async (req, res) => {
       const name = req.query.name
       const page = req.query.page
