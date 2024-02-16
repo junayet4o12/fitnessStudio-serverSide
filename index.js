@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
-const frontendUrl = "https://fitness-studio.surge.sh";
+const frontendUrl = "https://fitness-studio.surge.sh"
 // socketio connect  start
 const socketIo = require("socket.io");
 const http = require("http");
@@ -259,7 +259,7 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/user_goal", verifyToken, async (req, res) => {
+    app.post("/user_goal", async (req, res) => {
       const goalInfo = req.body;
       const result = await UserGoalCollection.insertOne(goalInfo);
       res.send(result);
@@ -267,21 +267,39 @@ async function run() {
 
   
 
-    app.get("/user_goal/:email", verifyToken, async (req, res) => {
+    app.get("/user_goal/:email", async (req, res) => {
       const email = req.params.email;
       console.log(email);
-      if (email !== req.user.email) {
-          return res.status(403).send({ message: "forbidden" });
-      } else {
+      // if (email !== req.user.email) {
+      //     return res.status(403).send({ message: "forbidden" });
+      // } else {
+
           const query = { user_email: email };
           const result = await UserGoalCollection.find(query)
                               .sort({ _id: -1 })
                               .toArray();
           res.send(result);
-      }
+      // }
   })
 
-  
+  app.put("/user_goal/:id", async (req, res) => {
+    const id = req.params.id;
+    const data = req.body;
+    console.log("id", id, data);
+    const filter = { _id: new ObjectId(id) };
+    const options = { upsert: true };
+    const updatedUSer = {
+      $set: {
+        user_current_weight: data.user_current_weight,
+      },
+    };
+    const result = await UserGoalCollection.updateOne(
+      filter,
+      updatedUSer,
+      options
+    );
+    res.send(result);
+  });
 
     app.get("/user", async (req, res) => {
       const email = req.query.email;
