@@ -12,25 +12,25 @@ const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const frontendUrl = "http://localhost:5173";
 // socketio connect  start
-const socketIo = require('socket.io')
-const http = require('http')
-const server = http.createServer(app)
+const socketIo = require("socket.io");
+const http = require("http");
+const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: frontendUrl,
     methods: ["GET", "POST"],
-    credentials: true
-  }
-})
+    credentials: true,
+  },
+});
 
-io.on('connection', (socket) => {
-  console.log('A user connected');
+io.on("connection", (socket) => {
+  console.log("A user connected");
 
   // Handle incoming messages
-  socket.on('message', (message) => {
-    console.log('Message received:', message);
+  socket.on("message", (message) => {
+    console.log("Message received:", message);
     // Broadcast the message to all connected clients
-    io.emit('message', message);
+    io.emit("message", message);
   });
   socket.on('refetch', (message) => {
     console.log('Message received:', message);
@@ -39,8 +39,8 @@ io.on('connection', (socket) => {
   });
 
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
   });
 });
 // socketio connect  end
@@ -88,9 +88,6 @@ const verifyToken = async (req, res, next) => {
   });
 };
 
-
-
-
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -101,20 +98,19 @@ async function run() {
     const BlogsCollection = FitnessStudio.collection("Blogs_Collections");
     const UserMessagesCollection = FitnessStudio.collection("UserMessages_Collections");
 
-
     // verify Admin  start
     const verifyadmin = async (req, res, next) => {
       const email = req?.user?.email;
       const query = { email: email };
       const user = await UsersCollection.findOne(query);
-      const isadmin = user?.admin === true
+      const isadmin = user?.admin === true;
       if (!isadmin) {
-        return res.status(403).send({ message: "forbidden" })
+        return res.status(403).send({ message: "forbidden" });
       }
 
-      next()
-    }
-    // verify Admin end 
+      next();
+    };
+    // verify Admin end
 
     // fitbit start
     app.get("/authorizeFitbit", (req, res) => {
@@ -264,6 +260,26 @@ async function run() {
       res.send(result);
     });
 
+ 
+
+    app.put("/user_goal/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      console.log("id", id, data);
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedUSer = {
+        $set: {
+          user_current_weight: data.user_current_weight,
+        },
+      };
+      const result = await UserGoalCollection.updateOne(
+        filter,
+        updatedUSer,
+        options
+      );
+      res.send(result);
+    });
   
 
     app.get("/user_goal/:email", verifyToken, async (req, res) => {
@@ -298,38 +314,37 @@ async function run() {
       res.send(result)
     })
     app.get("/users", verifyToken, async (req, res) => {
-      const name = req.query.name
-      const page = req.query.page
-      const size = req.query.size
-      let query = {}
+      const name = req.query.name;
+      const page = req.query.page;
+      const size = req.query.size;
+      let query = {};
       if (req.query.name) {
         query = {
-          name: { $regex: name, $options: "i" }
-        }
+          name: { $regex: name, $options: "i" },
+        };
       }
-      const result = await UsersCollection
-        .find(query)
+      const result = await UsersCollection.find(query)
         .skip(parseInt(size * page))
         .limit(parseInt(size))
         .toArray();
       res.send(result);
     });
     app.get("/search_people/:name", verifyToken, async (req, res) => {
-      const name = req.params.name
-      let query = {}
+      const name = req.params.name;
+      let query = {};
       if (req.params.name) {
         query = {
-          name: { $regex: name, $options: "i" }
-        }
+          name: { $regex: name, $options: "i" },
+        };
       }
 
       const result = await UsersCollection.find(query).toArray();
       res.send(result);
     });
-    app.get('/usersCount', verifyToken, async (req, res) => {
-      const count = await UsersCollection.estimatedDocumentCount()
-      res.send({ count })
-    })
+    app.get("/usersCount", verifyToken, async (req, res) => {
+      const count = await UsersCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
 
     // user update user to admin
     // make admin
@@ -350,30 +365,25 @@ async function run() {
       }
     );
     // make admin to user
-    app.put(
-      "/make-user/:email",
-      verifyToken,
-      verifyadmin,
-      async (req, res) => {
-        const email = req.params.email;
-        const query = { email: email };
-        const updatedRole = {
-          $set: {
-            role: "user",
-          },
-        };
-        const result = await UsersCollection.updateOne(query, updatedRole);
-        res.send(result);
-      }
-    );
+    app.put("/make-user/:email", verifyToken, verifyadmin, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const updatedRole = {
+        $set: {
+          role: "user",
+        },
+      };
+      const result = await UsersCollection.updateOne(query, updatedRole);
+      res.send(result);
+    });
 
     // Users Delete
-    app.delete('/users/:id', verifyToken, async (req, res) => {
+    app.delete("/users/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await UsersCollection.deleteOne(query);
       res.send(result);
-    })
+    });
 
     app.get("/users/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -386,14 +396,13 @@ async function run() {
         res.send(result);
       }
     });
-    app.get('/single_user/:id', async (req, res) => {
+    app.get("/single_user/:id", async (req, res) => {
       const id = req.params.id;
       // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await UsersCollection.findOne(query);
-      console.log(result);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     app.put("/update_user_data/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -418,19 +427,19 @@ async function run() {
     });
     // user end
     // admin start
-    app.get('/admin/:email', verifyToken, async (req, res) => {
+    app.get("/admin/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       if (email !== req.user.email) {
-        return res.status(403).send({ message: 'forbidden' })
+        return res.status(403).send({ message: "forbidden" });
       }
-      const query = { email: email }
-      const user = await UsersCollection.findOne(query)
-      let admin = false
+      const query = { email: email };
+      const user = await UsersCollection.findOne(query);
+      let admin = false;
       if (user) {
-        admin = user?.admin === true
+        admin = user?.admin === true;
       }
-      res.send({ admin })
-    })
+      res.send({ admin });
+    });
     // admin end
 
     // blogs start here
@@ -443,8 +452,8 @@ async function run() {
         };
       }
 
-      const page = parseInt(req.query.page)
-      const size = parseInt(req.query.size)
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
       console.log(page);
       console.log(size);
       const result = await BlogsCollection.find(query)
@@ -455,9 +464,9 @@ async function run() {
     });
 
     app.get("/blogcount", async (req, res) => {
-      const count = await BlogsCollection.estimatedDocumentCount()
-      res.send({ count })
-    })
+      const count = await BlogsCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
 
     app.get("/blogs/:id", async (req, res) => {
       const id = req.params.id;
@@ -504,61 +513,79 @@ async function run() {
     // blogs end here
 
     // connecting people start
-    app.put('/following/:id', async (req, res) => {
-      const data = req?.body
+    app.put("/following/:id", async (req, res) => {
+      const data = req?.body;
       const followingId = req?.params?.id;
       const followedId = data?._id;
-      // following peopleId 
-      const query1 = { _id: new ObjectId(followingId) }
-      // followed people id 
-      const query2 = { _id: new ObjectId(followedId) }
+      // following peopleId
+      const query1 = { _id: new ObjectId(followingId) };
+      // followed people id
+      const query2 = { _id: new ObjectId(followedId) };
       console.log(query1, query2);
-      // updated in following backend 
+      // updated in following backend
       const updatedFollowing = {
-        $push: { following: followedId }
+        $push: { following: followedId },
       };
       // updated in  followed backend
       const updatedFollowed = {
-        $push: { followed: followingId }
+        $push: { followed: followingId },
       };
-      // result for following 
-      const followingResult = await UsersCollection.updateOne(query1, updatedFollowing)
+      // result for following
+      const followingResult = await UsersCollection.updateOne(
+        query1,
+        updatedFollowing
+      );
       // result for followed
-      const followedResult = await UsersCollection.updateOne(query2, updatedFollowed)
-      res.send({ followingResult, followedResult })
-    })
-    app.put('/unfollowing/:id', async (req, res) => {
-      const data = req?.body
+      const followedResult = await UsersCollection.updateOne(
+        query2,
+        updatedFollowed
+      );
+      res.send({ followingResult, followedResult });
+    });
+    app.put("/unfollowing/:id", async (req, res) => {
+      const data = req?.body;
       const followingId = req?.params?.id;
       const followedId = data?._id;
-      // following peopleId 
-      const query1 = { _id: new ObjectId(followingId) }
-      // followed people id 
-      const query2 = { _id: new ObjectId(followedId) }
+      // following peopleId
+      const query1 = { _id: new ObjectId(followingId) };
+      // followed people id
+      const query2 = { _id: new ObjectId(followedId) };
       console.log(query1, query2);
       const removeFromFollowing = {
-        $pull: { following: followedId }
+        $pull: { following: followedId },
       };
       const removeFromFollowed = {
-        $pull: { followed: followingId }
+        $pull: { followed: followingId },
       };
-      // result for following 
-      const unfollowingResult = await UsersCollection.updateOne(query1, removeFromFollowing)
+      // result for following
+      const unfollowingResult = await UsersCollection.updateOne(
+        query1,
+        removeFromFollowing
+      );
       // result for followed
-      const unfollowedResult = await UsersCollection.updateOne(query2, removeFromFollowed)
-      res.send({ unfollowingResult, unfollowedResult })
-    })
-    app.get('/get_following_and_follower/:email', async (req, res) => {
+      const unfollowedResult = await UsersCollection.updateOne(
+        query2,
+        removeFromFollowed
+      );
+      res.send({ unfollowingResult, unfollowedResult });
+    });
+    app.get("/get_following_and_follower/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await UsersCollection.findOne(query);
-      const followingId = (result?.following || []).map(id => new ObjectId(id));
-      const followedId = (result?.followed || []).map(id => new ObjectId(id));
-      const followingMembers = await UsersCollection.find({ _id: { $in: followingId } }).toArray()
-      const followedMembers = await UsersCollection.find({ _id: { $in: followedId } }).toArray()
+      const followingId = (result?.following || []).map(
+        (id) => new ObjectId(id)
+      );
+      const followedId = (result?.followed || []).map((id) => new ObjectId(id));
+      const followingMembers = await UsersCollection.find({
+        _id: { $in: followingId },
+      }).toArray();
+      const followedMembers = await UsersCollection.find({
+        _id: { $in: followedId },
+      }).toArray();
       // console.log(followingMembers,followedMembers);
-      res.send({ followingMembers, followedMembers })
-    })
+      res.send({ followingMembers, followedMembers });
+    });
     // connecting people end
 
 
