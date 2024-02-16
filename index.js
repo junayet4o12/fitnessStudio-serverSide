@@ -15,7 +15,7 @@ const frontendUrl = "https://fitness-studio.surge.sh";
 const socketIo = require("socket.io");
 const http = require("http");
 const https = require('https');
-const server = https.createServer(app);
+const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: frontendUrl,
