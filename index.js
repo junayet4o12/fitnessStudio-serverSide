@@ -17,7 +17,7 @@ const http = require('http')
 const server = http.createServer(app)
 const io = socketIo(server, {
   cors: {
-    origin: frontendUrl, 
+    origin: frontendUrl,
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -32,13 +32,16 @@ io.on('connection', (socket) => {
     // Broadcast the message to all connected clients
     io.emit('message', message);
   });
+  socket.on('refetch', (message) => {
+    console.log('Message received:', message);
+    // Broadcast the message to all connected clients
+    io.emit('refetch', message);
+  });
+
 
   socket.on('disconnect', () => {
     console.log('User disconnected');
   });
-});
-server.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
 });
 // socketio connect  end
 // middlewareee
@@ -96,6 +99,7 @@ async function run() {
     const UsersCollection = FitnessStudio.collection("Users");
     const UserGoalCollection = FitnessStudio.collection("User_Goal");
     const BlogsCollection = FitnessStudio.collection("Blogs_Collections");
+    const UserMessagesCollection = FitnessStudio.collection("UserMessages_Collections");
 
 
     // verify Admin  start
@@ -281,15 +285,18 @@ async function run() {
     app.get("/user", async (req, res) => {
       const email = req.query.email;
       let query = {};
-    
-      if (req.query.email) { 
+
+      if (req.query.email) {
         query = { email: email };
       }
-    
+
       const result = await UsersCollection.findOne(query);
       res.send(result);
     });
-    
+    app.get('/all_Users', async (req, res) => {
+      const result = await UsersCollection.find().toArray();
+      res.send(result)
+    })
     app.get("/users", verifyToken, async (req, res) => {
       const name = req.query.name
       const page = req.query.page
@@ -381,8 +388,10 @@ async function run() {
     });
     app.get('/single_user/:id', async (req, res) => {
       const id = req.params.id;
+      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await UsersCollection.findOne(query);
+      console.log(result);
       res.send(result)
     })
 
@@ -552,6 +561,32 @@ async function run() {
     })
     // connecting people end
 
+
+    // message endpoint start 
+    app.post('/send_message', async (req, res) => {
+      const data = req.body;
+      console.log(data);
+      const result = await UserMessagesCollection.insertOne(data);
+      res.send(result)
+    })
+    app.get('/all_message', async (req, res) => {
+      const result = await UserMessagesCollection.find().toArray();
+      res.send(result)
+    })
+    app.get('/message_with_friend', async (req, res) => {
+      const { you, friend } = req?.query;
+      console.log(you, friend);
+      const query = {
+        $or: [
+          { sender: you, receiver: friend },
+          { sender: friend, receiver: you }
+        ]
+      };
+      const result = await UserMessagesCollection.find(query).toArray();
+      res.send(result)
+    })
+    // message endpoint end
+
     // await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -569,3 +604,6 @@ app.get("/", (req, res) => {
   res.send("Fitness is running...");
 });
 
+server.listen(port, () => {
+  console.log(`Fitness are Running on port ${port}`);
+});
