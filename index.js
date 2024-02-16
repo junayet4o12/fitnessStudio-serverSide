@@ -230,7 +230,7 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
+          secure: true,
           sameSite: "None",
         })
         .send({ setToken: "success" });
