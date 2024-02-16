@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
-const frontendUrl = "fitness-studio.surge.sh";
+const frontendUrl = "https://fitness-studio.surge.sh";
 // socketio connect  start
 const socketIo = require('socket.io')
 const http = require('http')
