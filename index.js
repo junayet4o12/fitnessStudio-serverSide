@@ -197,8 +197,8 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
-          sameSite: "Lax",
+          secure: true,
+          sameSite: "None",
         })
         .send({ setToken: "success" });
     });
