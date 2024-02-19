@@ -10,7 +10,8 @@ const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
-const frontendUrl = "fitness-studio.surge.sh";
+// const frontendUrl = "fitness-studio.surge.sh";
+const frontendUrl = "http://localhost:5173";
 // socketio connect  start
 const socketIo = require("socket.io");
 const http = require("http");
@@ -97,6 +98,7 @@ async function run() {
     const UserGoalCollection = FitnessStudio.collection("User_Goal");
     const BlogsCollection = FitnessStudio.collection("Blogs_Collections");
     const UserMessagesCollection = FitnessStudio.collection("UserMessages_Collections");
+    const ProductsCollection = FitnessStudio.collection("Products_Collections")
 
     // verify Admin  start
     const verifyadmin = async (req, res, next) => {
@@ -587,6 +589,23 @@ async function run() {
       res.send({ followingMembers, followedMembers });
     });
     // connecting people end
+
+    // products section started
+
+    // getting the products
+    app.get("/products", async(req, res)=>{
+      
+      const result = await ProductsCollection.find().toArray()
+      res.send(result)
+    })
+    // postiong the products
+    app.post("/products", async(req, res)=>{
+      const data = req.body
+      const result = await ProductsCollection.insertOne(data)
+      res.send(result)
+    })
+
+    // products section ended
 
 
     // message endpoint start 
