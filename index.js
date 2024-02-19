@@ -10,41 +10,8 @@ const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
-// const frontendUrl = "fitness-studio.surge.sh";
 const frontendUrl = "http://localhost:5173";
-// socketio connect  start
-const socketIo = require("socket.io");
-const http = require("http");
-const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: frontendUrl,
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
 
-io.on("connection", (socket) => {
-  console.log("A user connected");
-
-  // Handle incoming messages
-  socket.on("message", (message) => {
-    console.log("Message received:", message);
-    // Broadcast the message to all connected clients
-    io.emit("message", message);
-  });
-  socket.on('refetch', (message) => {
-    console.log('Message received:', message);
-    // Broadcast the message to all connected clients
-    io.emit('refetch', message);
-  });
-
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
-// socketio connect  end
 // middlewareee
 app.use(cookieParser());
 app.use(
@@ -88,6 +55,9 @@ const verifyToken = async (req, res, next) => {
     }
   });
 };
+
+
+
 
 async function run() {
   try {
@@ -262,7 +232,7 @@ async function run() {
       res.send(result);
     });
 
- 
+
 
     app.put("/user_goal/:id", async (req, res) => {
       const id = req.params.id;
@@ -282,23 +252,23 @@ async function run() {
       );
       res.send(result);
     });
-  
+
 
     app.get("/user_goal/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       console.log(email);
       if (email !== req.user.email) {
-          return res.status(403).send({ message: "forbidden" });
+        return res.status(403).send({ message: "forbidden" });
       } else {
-          const query = { user_email: email };
-          const result = await UserGoalCollection.find(query)
-                              .sort({ _id: -1 })
-                              .toArray();
-          res.send(result);
+        const query = { user_email: email };
+        const result = await UserGoalCollection.find(query)
+          .sort({ _id: -1 })
+          .toArray();
+        res.send(result);
       }
-  })
+    })
 
-  
+
 
     app.get("/user", async (req, res) => {
       const email = req.query.email;
@@ -631,6 +601,26 @@ async function run() {
       const result = await UserMessagesCollection.find(query).toArray();
       res.send(result)
     })
+    app.get('/unread_message', async (req, res) => {
+      const { you, friend } = req?.query;
+      console.log(you, friend);
+      const query = { sender: friend, receiver: you, seen: false }
+      console.log(query);
+      const result = await UserMessagesCollection.find(query).toArray()
+      res.send({ count: result.length })
+    })
+    app.put('/read_message', async (req, res) => {
+      const { you, friend } = req?.query;
+      console.log(you, friend);
+      const query = { sender: friend, receiver: you, seen: false }
+      const updatedData = {
+        $set: {
+          seen: true
+        }
+      }
+      const result = await UserMessagesCollection.updateMany(query, updatedData)
+      res.send(result)
+    })
     // message endpoint end
 
     // await client.connect();
@@ -650,6 +640,6 @@ app.get("/", (req, res) => {
   res.send("Fitness is running...");
 });
 
-server.listen(port, () => {
-  console.log(`Fitness are Running on port ${port}`);
-});
+app.listen(port, () => {
+  console.log(`Fitness are Running on port ${port}`)
+})
