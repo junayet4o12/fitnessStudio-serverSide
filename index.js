@@ -68,6 +68,7 @@ async function run() {
     const UserGoalCollection = FitnessStudio.collection("User_Goal");
     const BlogsCollection = FitnessStudio.collection("Blogs_Collections");
     const UserMessagesCollection = FitnessStudio.collection("UserMessages_Collections");
+    const ProductsCollection = FitnessStudio.collection("Products_Collections")
 
     // verify Admin  start
     const verifyadmin = async (req, res, next) => {
@@ -232,6 +233,17 @@ async function run() {
     });
 
 
+
+    app.delete("/user_goal/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log("delete", id);
+      const query = {
+        _id: new ObjectId(id),
+      };
+      const result = await UserGoalCollection.deleteOne(query);
+      console.log(result);
+      res.send(result);
+    });
 
     app.put("/user_goal/:id", async (req, res) => {
       const id = req.params.id;
@@ -470,6 +482,7 @@ async function run() {
 
     app.delete("/delete_blog/:id", async (req, res) => {
       const id = req?.params?.id;
+      console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await BlogsCollection.deleteOne(query);
       res.send(result);
@@ -566,6 +579,63 @@ async function run() {
       res.send({ followingMembers, followedMembers });
     });
     // connecting people end
+
+    // products section started
+
+    // getting the products
+    app.get("/products", async(req, res)=>{
+      const email = req.query.email
+      const verify = req.query.verify
+      let query = {}
+      if(req.query.email){
+        query= {sellerEmail: email}
+      }
+      if (req.query.verify) {
+        query = {verify: verify}
+      }
+      const result = await ProductsCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    // product my id
+    app.get('/products/:id', async (req, res)=>{
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await ProductsCollection.findOne(query)
+      res.send(result)
+    })
+    // postiong the products
+    app.post("/products", async(req, res)=>{
+      const data = req.body
+      const result = await ProductsCollection.insertOne(data)
+      res.send(result)
+    })
+
+    // lets verify the product
+    app.post('/product/:id', async(req, res)=>{
+      const id = req.params.id
+      const filter = {_id: new ObjectId(id)}
+      const option = {upsert:true}
+      const vefify = "verified"
+      // const updateProduct = req.body
+      const product = {
+        $set:{
+          verify: vefify
+        }
+      }
+      const result = await ProductsCollection.updateOne(filter, product, option)
+      res.send(result)
+    })
+
+    //product deletiong
+    app.get('/Delproduct/:id', async(req, res)=>{
+      const id = req.params.id
+      const filter = {_id: new ObjectId(id)}
+      const result = await ProductsCollection.deleteOne(filter)
+      res.send(result)
+    })
+
+    // products section ended
 
 
     // message endpoint start 
