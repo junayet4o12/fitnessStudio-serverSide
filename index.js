@@ -564,14 +564,54 @@ async function run() {
 
     // getting the products
     app.get("/products", async(req, res)=>{
-      
-      const result = await ProductsCollection.find().toArray()
+      const email = req.query.email
+      const verify = req.query.verify
+      let query = {}
+      if(req.query.email){
+        query= {sellerEmail: email}
+      }
+      if (req.query.verify) {
+        query = {verify: verify}
+      }
+      const result = await ProductsCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    // product my id
+    app.get('/products/:id', async (req, res)=>{
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await ProductsCollection.findOne(query)
       res.send(result)
     })
     // postiong the products
     app.post("/products", async(req, res)=>{
       const data = req.body
       const result = await ProductsCollection.insertOne(data)
+      res.send(result)
+    })
+
+    // lets verify the product
+    app.post('/product/:id', async(req, res)=>{
+      const id = req.params.id
+      const filter = {_id: new ObjectId(id)}
+      const option = {upsert:true}
+      const vefify = "verified"
+      // const updateProduct = req.body
+      const product = {
+        $set:{
+          verify: vefify
+        }
+      }
+      const result = await ProductsCollection.updateOne(filter, product, option)
+      res.send(result)
+    })
+
+    //product deletiong
+    app.get('/Delproduct/:id', async(req, res)=>{
+      const id = req.params.id
+      const filter = {_id: new ObjectId(id)}
+      const result = await ProductsCollection.deleteOne(filter)
       res.send(result)
     })
 
