@@ -312,6 +312,13 @@ async function run() {
       const result = await UsersCollection.find(query).toArray();
       res.send(result);
     });
+    app.get("/random_people", verifyToken,  async (req, res) => {
+      const result = await UsersCollection.find().toArray();
+      const randomNumber = Math.floor(Math.random()*result.length)
+      const result2 = result.slice(randomNumber, randomNumber+4)
+      res.send(result2);
+    });
+
     app.get("/usersCount", verifyToken, async (req, res) => {
       const count = await UsersCollection.estimatedDocumentCount();
       res.send({ count });
@@ -450,6 +457,7 @@ async function run() {
     app.get("/my_blogs/:email", async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
+      console.log(query);
       const result = await BlogsCollection.find(query).toArray();
       res.send(result);
     });
