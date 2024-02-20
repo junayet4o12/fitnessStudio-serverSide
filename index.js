@@ -11,36 +11,7 @@ const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const frontendUrl = "http://localhost:5173";
-// socketio connect  start
-const socketIo = require("socket.io");
-const http = require("http");
-const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: frontendUrl,
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
 
-io.on("connection", (socket) => {
-  console.log("A user connected");
-
-  // Handle incoming messages
-  socket.on("message", (message) => {
-    console.log("Message received:", message);
-    // Broadcast the message to all connected clients
-    io.emit("message", message);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
-server.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
-// socketio connect  end
 // middlewareee
 app.use(cookieParser());
 app.use(
@@ -85,6 +56,9 @@ const verifyToken = async (req, res, next) => {
   });
 };
 
+
+
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -93,6 +67,8 @@ async function run() {
     const UsersCollection = FitnessStudio.collection("Users");
     const UserGoalCollection = FitnessStudio.collection("User_Goal");
     const BlogsCollection = FitnessStudio.collection("Blogs_Collections");
+    const UserMessagesCollection = FitnessStudio.collection("UserMessages_Collections");
+    const ProductsCollection = FitnessStudio.collection("Products_Collections")
 
     // verify Admin  start
     const verifyadmin = async (req, res, next) => {
@@ -256,20 +232,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/user_goal/:email", async (req, res) => {
-      const email = req.params.email;
-      console.log(email);
-      // if (email !== req.user.email) {
-      //   return res.status(403).send({ message: "forbidden" });
-      // } else {
-      const query = { user_email: email };
-      const result = await UserGoalCollection.find(query).toArray();
-      res.send(result);
-      app.get("/user_goal", async (req, res) => {
-        const result = await UserGoalCollection.find().toArray();
-        res.send(result);
-      });
-    });
+
 
     app.delete("/user_goal/:id", async (req, res) => {
       const id = req.params.id;
@@ -301,6 +264,23 @@ async function run() {
       res.send(result);
     });
 
+
+    app.get("/user_goal/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      console.log(email);
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: "forbidden" });
+      } else {
+        const query = { user_email: email };
+        const result = await UserGoalCollection.find(query)
+          .sort({ _id: -1 })
+          .toArray();
+        res.send(result);
+      }
+    })
+
+
+
     app.get("/user", async (req, res) => {
       const email = req.query.email;
       let query = {};
@@ -312,7 +292,10 @@ async function run() {
       const result = await UsersCollection.findOne(query);
       res.send(result);
     });
-
+    app.get('/all_Users', async (req, res) => {
+      const result = await UsersCollection.find().toArray();
+      res.send(result)
+    })
     app.get("/users", verifyToken, async (req, res) => {
       const name = req.query.name;
       const page = req.query.page;
@@ -398,6 +381,7 @@ async function run() {
     });
     app.get("/single_user/:id", async (req, res) => {
       const id = req.params.id;
+      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await UsersCollection.findOne(query);
       res.send(result);
@@ -587,6 +571,69 @@ async function run() {
     });
     // connecting people end
 
+    // products section started
+
+    // getting the products
+    app.get("/products", async(req, res)=>{
+      
+      const result = await ProductsCollection.find().toArray()
+      res.send(result)
+    })
+    // postiong the products
+    app.post("/products", async(req, res)=>{
+      const data = req.body
+      const result = await ProductsCollection.insertOne(data)
+      res.send(result)
+    })
+
+    // products section ended
+
+
+    // message endpoint start 
+    app.post('/send_message', async (req, res) => {
+      const data = req.body;
+      console.log(data);
+      const result = await UserMessagesCollection.insertOne(data);
+      res.send(result)
+    })
+    app.get('/all_message', async (req, res) => {
+      const result = await UserMessagesCollection.find().toArray();
+      res.send(result)
+    })
+    app.get('/message_with_friend', async (req, res) => {
+      const { you, friend } = req?.query;
+      console.log(you, friend);
+      const query = {
+        $or: [
+          { sender: you, receiver: friend },
+          { sender: friend, receiver: you }
+        ]
+      };
+      const result = await UserMessagesCollection.find(query).toArray();
+      res.send(result)
+    })
+    app.get('/unread_message', async (req, res) => {
+      const { you, friend } = req?.query;
+      console.log(you, friend);
+      const query = { sender: friend, receiver: you, seen: false }
+      console.log(query);
+      const result = await UserMessagesCollection.find(query).toArray()
+      res.send({ count: result.length })
+    })
+    app.put('/read_message', async (req, res) => {
+      const { you, friend } = req?.query;
+      console.log(you, friend);
+      const query = { sender: friend, receiver: you, seen: false }
+      const updatedData = {
+        $set: {
+          seen: true
+        }
+      }
+      const result = await UserMessagesCollection.updateMany(query, updatedData)
+      res.send(result)
+    })
+    // message endpoint end
+
     // await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -603,3 +650,7 @@ run().catch(console.dir);
 app.get("/", (req, res) => {
   res.send("Fitness is running...");
 });
+
+app.listen(port, () => {
+  console.log(`Fitness are Running on port ${port}`)
+})
