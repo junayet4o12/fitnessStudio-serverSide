@@ -234,6 +234,17 @@ async function run() {
 
 
 
+    app.delete("/user_goal/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log("delete", id);
+      const query = {
+        _id: new ObjectId(id),
+      };
+      const result = await UserGoalCollection.deleteOne(query);
+      console.log(result);
+      res.send(result);
+    });
+
     app.put("/user_goal/:id", async (req, res) => {
       const id = req.params.id;
       const data = req.body;
@@ -463,6 +474,7 @@ async function run() {
 
     app.delete("/delete_blog/:id", async (req, res) => {
       const id = req?.params?.id;
+      console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await BlogsCollection.deleteOne(query);
       res.send(result);
