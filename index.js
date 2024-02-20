@@ -564,8 +564,20 @@ async function run() {
 
     // getting the products
     app.get("/products", async(req, res)=>{
-      
-      const result = await ProductsCollection.find().toArray()
+      const email = req.query.email
+      let query = {}
+      if(req.query.email){
+        query= {sellerEmail: email}
+      }
+      const result = await ProductsCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    // product my id
+    app.get('/products/:id', async (req, res)=>{
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await ProductsCollection.findOne(query)
       res.send(result)
     })
     // postiong the products
