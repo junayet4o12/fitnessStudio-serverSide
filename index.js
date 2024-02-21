@@ -10,6 +10,7 @@ const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
+const { TIMEOUT } = require("dns");
 const frontendUrl = "http://localhost:5173";
 
 // middlewareee
@@ -324,10 +325,10 @@ async function run() {
       const result = await UsersCollection.find(query).toArray();
       res.send(result);
     });
-    app.get("/random_people", verifyToken,  async (req, res) => {
+    app.get("/random_people", verifyToken, async (req, res) => {
       const result = await UsersCollection.find().toArray();
-      const randomNumber = Math.floor(Math.random()*result.length)
-      const result2 = result.slice(randomNumber, randomNumber+4)
+      const randomNumber = Math.floor(Math.random() * result.length)
+      const result2 = result.slice(randomNumber, randomNumber + 4)
       res.send(result2);
     });
 
@@ -509,6 +510,9 @@ async function run() {
       const data = req?.body;
       const followingId = req?.params?.id;
       const followedId = data?._id;
+      const time = new Date().getTime()
+      const followedTime = { time: time, followedId: followingId }
+      console.log('I want to give follow', followingId, followedTime);
       // following peopleId
       const query1 = { _id: new ObjectId(followingId) };
       // followed people id
@@ -520,7 +524,7 @@ async function run() {
       };
       // updated in  followed backend
       const updatedFollowed = {
-        $push: { followed: followingId },
+        $push: { followed: followingId, followedTime: followedTime }
       };
       // result for following
       const followingResult = await UsersCollection.updateOne(
@@ -583,7 +587,7 @@ async function run() {
     // products section started
 
     // getting the products
-    app.get("/products", async(req, res)=>{
+    app.get("/products", async (req, res) => {
       const email = req.query.email
       const verify = req.query.verify
       const sold = req.query.sold
@@ -620,27 +624,27 @@ async function run() {
     // })
 
     // product my id
-    app.get('/products/:id', async (req, res)=>{
+    app.get('/products/:id', async (req, res) => {
       const id = req.params.id
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await ProductsCollection.findOne(query)
       res.send(result)
     })
     // postiong the products
-    app.post("/products", async(req, res)=>{
+    app.post("/products", async (req, res) => {
       const data = req.body
       const result = await ProductsCollection.insertOne(data)
       res.send(result)
     })
 
     // lets verify the product
-    app.post('/product/:id', async(req, res)=>{
+    app.post('/product/:id', async (req, res) => {
       const id = req.params.id
-      const filter = {_id: new ObjectId(id)}
-      const option = {upsert:true}
+      const filter = { _id: new ObjectId(id) }
+      const option = { upsert: true }
       const vefify = "verified"
       const product = {
-        $set:{
+        $set: {
           verify: vefify
         }
       }
@@ -649,14 +653,14 @@ async function run() {
     })
 
     // Marking sold products 
-    app.post('/sold_product/:id', async(req, res)=>{
+    app.post('/sold_product/:id', async (req, res) => {
       const id = req.params.id
-      const filter = {_id: new ObjectId(id)}
-      const option = {upsert:true}
+      const filter = { _id: new ObjectId(id) }
+      const option = { upsert: true }
       const sold = "sold"
       // const updateProduct = req.body
       const product = {
-        $set:{
+        $set: {
           sold: sold
         }
       }
@@ -665,20 +669,20 @@ async function run() {
     })
 
     // updating or modifing a product
-    app.post('/updateProduct/:id', async(req, res)=>{
+    app.post('/updateProduct/:id', async (req, res) => {
       const id = req.params.id
-      const filter = {_id: new ObjectId(id)}
-      const option = {upsert:true}
+      const filter = { _id: new ObjectId(id) }
+      const option = { upsert: true }
       const updateProduct = req.body
       const product = {
-        $set:{
+        $set: {
           Pname: updateProduct.Pname,
-          Pprice:updateProduct.Pprice ,
-          Pquantity:updateProduct.Pquantity ,
-          Pdescription:updateProduct.Pdescription ,
-          imgUrl:updateProduct.imgUrl ,
-          PPhone:updateProduct.PPhone ,
-          PEmail:updateProduct.PEmail
+          Pprice: updateProduct.Pprice,
+          Pquantity: updateProduct.Pquantity,
+          Pdescription: updateProduct.Pdescription,
+          imgUrl: updateProduct.imgUrl,
+          PPhone: updateProduct.PPhone,
+          PEmail: updateProduct.PEmail
         }
       }
       const result = await ProductsCollection.updateOne(filter, product, option)
@@ -686,9 +690,9 @@ async function run() {
     })
 
     //product deletiong
-    app.get('/Delproduct/:id', async(req, res)=>{
+    app.get('/Delproduct/:id', async (req, res) => {
       const id = req.params.id
-      const filter = {_id: new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) }
       const result = await ProductsCollection.deleteOne(filter)
       res.send(result)
     })
