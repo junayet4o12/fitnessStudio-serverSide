@@ -578,12 +578,17 @@ async function run() {
     app.get("/products", async(req, res)=>{
       const email = req.query.email
       const verify = req.query.verify
+      const sold = req.query.sold
+      console.log(sold);
       let query = {}
       if(req.query.email){
         query= {sellerEmail: email}
       }
       if (req.query.verify) {
         query = {verify: verify}
+      }
+      if (req.query.sold) {
+        query = {sold: sold}
       }
       const result = await ProductsCollection.find(query).toArray()
       res.send(result)
@@ -609,10 +614,46 @@ async function run() {
       const filter = {_id: new ObjectId(id)}
       const option = {upsert:true}
       const vefify = "verified"
-      // const updateProduct = req.body
       const product = {
         $set:{
           verify: vefify
+        }
+      }
+      const result = await ProductsCollection.updateOne(filter, product, option)
+      res.send(result)
+    })
+
+    // Marking sold products 
+    app.post('/sold_product/:id', async(req, res)=>{
+      const id = req.params.id
+      const filter = {_id: new ObjectId(id)}
+      const option = {upsert:true}
+      const sold = "sold"
+      // const updateProduct = req.body
+      const product = {
+        $set:{
+          sold: sold
+        }
+      }
+      const result = await ProductsCollection.updateOne(filter, product, option)
+      res.send(result)
+    })
+
+    // updating or modifing a product
+    app.post('/updateProduct/:id', async(req, res)=>{
+      const id = req.params.id
+      const filter = {_id: new ObjectId(id)}
+      const option = {upsert:true}
+      const updateProduct = req.body
+      const product = {
+        $set:{
+          Pname: updateProduct.Pname,
+          Pprice:updateProduct.Pprice ,
+          Pquantity:updateProduct.Pquantity ,
+          Pdescription:updateProduct.Pdescription ,
+          imgUrl:updateProduct.imgUrl ,
+          PPhone:updateProduct.PPhone ,
+          PEmail:updateProduct.PEmail
         }
       }
       const result = await ProductsCollection.updateOne(filter, product, option)
