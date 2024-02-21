@@ -581,18 +581,35 @@ async function run() {
       const sold = req.query.sold
       console.log(sold);
       let query = {}
-      if(req.query.email){
+      if(req.query.email && req.query.verify){
+        query = { sellerEmail: email, verify: verify };
+      }
+      else if(req.query.email){
         query= {sellerEmail: email}
       }
-      if (req.query.verify) {
+      else if (req.query.verify) {
         query = {verify: verify}
       }
-      if (req.query.sold) {
+      else if (req.query.sold) {
         query = {sold: sold}
       }
       const result = await ProductsCollection.find(query).toArray()
       res.send(result)
     })
+
+    //only one users liveproducts
+    // app.get("/usersproduct", async(req, res)=>{
+    //   const email = req.query.email
+    //   const verify = req.query.verify
+    //   let query1 = {}
+    //   let query2 = {}
+    //   if(req.query.email && req.query.verify){
+    //     console.log(req.query.email);
+    //     console.log(req.query.verify);
+    //   }
+    //   const result = await ProductsCollection.find(query).toArray()
+    //   res.send(result)
+    // })
 
     // product my id
     app.get('/products/:id', async (req, res)=>{
