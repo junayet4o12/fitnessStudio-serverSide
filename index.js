@@ -779,6 +779,12 @@ async function run() {
       const result = await EventsBookingCollection.insertOne(data);
       res.send(result);
     });
+    app.delete("/cancel_booking/:id", async (req, res) => {
+      const id = req?.params?.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await EventsBookingCollection.deleteOne(query);
+      res.send(result);
+    });
     
 
     // event api end
