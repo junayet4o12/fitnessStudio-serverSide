@@ -763,6 +763,12 @@ async function run() {
       const result = await EventsCollection.find().toArray();
       res.send(result);
     });
+    app.get("/events_booking/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { user_email: email };
+      const result = await EventsBookingCollection.find(filter).toArray();
+      res.send(result);
+    });
     app.post("/all_event", async (req, res) => {
       const data = req.body;
       const result = await EventsCollection.insertOne(data);
