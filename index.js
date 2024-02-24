@@ -763,6 +763,12 @@ async function run() {
       const result = await EventsCollection.find().toArray();
       res.send(result);
     });
+    app.get("/all_event/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await EventsCollection.findOne(query);
+      res.send(result);
+    });
     app.get("/events_booking/:email", async (req, res) => {
       const email = req.params.email;
       const filter = { user_email: email };
@@ -791,7 +797,29 @@ async function run() {
       const result = await EventsCollection.deleteOne(query);
       res.send(result);
     });
-    
+    app.put("/update_event/:id", async (req, res) => {
+      const updateInfo = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          event_name: updateInfo.event_name,
+          event_description: updateInfo.event_description,
+          event_image: updateInfo.event_image,
+          event_price: updateInfo.event_price,
+          event_tickets: updateInfo.event_tickets,
+          event_start_date: updateInfo.event_start_date,
+          event_start_end: updateInfo.event_start_end,
+        },
+      };
+      const result = await EventsCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
 
     // event api end
 
