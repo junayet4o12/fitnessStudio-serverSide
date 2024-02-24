@@ -70,6 +70,9 @@ async function run() {
     );
     const ProductsCollection = FitnessStudio.collection("Products_Collections");
     const EventsCollection = FitnessStudio.collection("Events_Collections");
+    const EventsBookingCollection = FitnessStudio.collection(
+      "Events_Booking_Collections"
+    );
 
     // verify Admin  start
     const verifyadmin = async (req, res, next) => {
@@ -756,15 +759,21 @@ async function run() {
 
     // message endpoint end
     // event api start
+    app.get("/all_event", async (req, res) => {
+      const result = await EventsCollection.find().toArray();
+      res.send(result);
+    });
     app.post("/all_event", async (req, res) => {
       const data = req.body;
       const result = await EventsCollection.insertOne(data);
       res.send(result);
     });
-    app.get("/all_event", async (req, res) => {
-      const result = await EventsCollection.find().toArray();
+    app.post("/events_booking", async (req, res) => {
+      const data = req.body;
+      const result = await EventsBookingCollection.insertOne(data);
       res.send(result);
     });
+    
 
     // event api end
 
