@@ -820,6 +820,23 @@ async function run() {
       );
       res.send(result);
     });
+    app.put("/event_booking_update/:id", async (req, res) => {
+      const updateInfo = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          event_tickets: updateInfo.event_tickets,
+        },
+      };
+      const result = await EventsCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
 
     // event api end
 
