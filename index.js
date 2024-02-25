@@ -11,7 +11,7 @@ const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const { TIMEOUT } = require("dns");
-const frontendUrl = "http://localhost:5173";
+const frontendUrl = "https://fitness-studio.surge.sh";
 
 // middlewareee
 app.use(cookieParser());
@@ -205,8 +205,8 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
-          sameSite: "Lax",
+          secure: true,
+          sameSite: "None",
         })
         .send({ setToken: "success" });
     });
