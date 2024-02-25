@@ -255,9 +255,10 @@ async function run() {
       const options = { upsert: true };
       const updatedUSer = {
         $set: {
-          user_current_weight: data.user_current_weight,
+          current_weight: data.current_weight,
         },
       };
+      console.log("current weight",updatedUSer);
       const result = await UserGoalCollection.updateOne(
         filter,
         updatedUSer,
@@ -481,7 +482,7 @@ async function run() {
 
     app.delete("/delete_blog/:id", async (req, res) => {
       const id = req?.params?.id;
-      console.log(id);
+      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await BlogsCollection.deleteOne(query);
       res.send(result);
