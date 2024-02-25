@@ -69,6 +69,10 @@ async function run() {
       "UserMessages_Collections"
     );
     const ProductsCollection = FitnessStudio.collection("Products_Collections");
+    const EventsCollection = FitnessStudio.collection("Events_Collections");
+    const EventsBookingCollection = FitnessStudio.collection(
+      "Events_Booking_Collections"
+    );
 
     // verify Admin  start
     const verifyadmin = async (req, res, next) => {
@@ -326,8 +330,8 @@ async function run() {
     });
     app.get("/random_people", verifyToken, async (req, res) => {
       const result = await UsersCollection.find().toArray();
-      const randomNumber = Math.floor(Math.random() * result.length)
-      const result2 = result.slice(randomNumber, randomNumber + 4)
+      const randomNumber = Math.floor(Math.random() * result.length);
+      const result2 = result.slice(randomNumber, randomNumber + 4);
       res.send(result2);
     });
 
@@ -509,9 +513,9 @@ async function run() {
       const data = req?.body;
       const followingId = req?.params?.id;
       const followedId = data?._id;
-      const time = new Date().getTime()
-      const followedTime = { time: time, followedId: followingId }
-      console.log('I want to give follow', followingId, followedTime);
+      const time = new Date().getTime();
+      const followedTime = { time: time, followedId: followingId };
+      console.log("I want to give follow", followingId, followedTime);
       // following peopleId
       const query1 = { _id: new ObjectId(followingId) };
       // followed people id
@@ -523,7 +527,7 @@ async function run() {
       };
       // updated in  followed backend
       const updatedFollowed = {
-        $push: { followed: followingId, followedTime: followedTime }
+        $push: { followed: followingId, followedTime: followedTime },
       };
       // result for following
       const followingResult = await UsersCollection.updateOne(
@@ -743,6 +747,87 @@ async function run() {
     });
 
     // message endpoint end
+    // event api start
+    app.get("/all_event", async (req, res) => {
+      const result = await EventsCollection.find().toArray();
+      res.send(result);
+    });
+    app.get("/all_event/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await EventsCollection.findOne(query);
+      res.send(result);
+    });
+    app.get("/events_booking/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { user_email: email };
+      const result = await EventsBookingCollection.find(filter).toArray();
+      res.send(result);
+    });
+    app.post("/all_event", async (req, res) => {
+      const data = req.body;
+      const result = await EventsCollection.insertOne(data);
+      res.send(result);
+    });
+    app.post("/events_booking", async (req, res) => {
+      const data = req.body;
+      const result = await EventsBookingCollection.insertOne(data);
+      res.send(result);
+    });
+    app.delete("/cancel_booking/:id", async (req, res) => {
+      const id = req?.params?.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await EventsBookingCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.delete("/all_event/:id", async (req, res) => {
+      const id = req?.params?.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await EventsCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.put("/update_event/:id", async (req, res) => {
+      const updateInfo = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          event_name: updateInfo.event_name,
+          event_description: updateInfo.event_description,
+          event_image: updateInfo.event_image,
+          event_price: updateInfo.event_price,
+          event_tickets: updateInfo.event_tickets,
+          event_start_date: updateInfo.event_start_date,
+          event_start_end: updateInfo.event_start_end,
+        },
+      };
+      const result = await EventsCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+    app.put("/event_booking_update/:id", async (req, res) => {
+      const updateInfo = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          event_tickets: updateInfo.event_tickets,
+        },
+      };
+      const result = await EventsCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    // event api end
 
     // await client.connect();
     // Send a ping to confirm a successful connection
