@@ -185,7 +185,7 @@ async function run() {
     // feedback start
 
     app.get("/feedback", async (req, res) => {
-      const result = await FeedbackCollection.find().toArray();
+      const result = await FeedbackCollection.find().sort({ time: -1 }).toArray();
       res.send(result);
     });
     app.post("/send_feedback", async (req, res) => {
@@ -259,9 +259,10 @@ async function run() {
       const options = { upsert: true };
       const updatedUSer = {
         $set: {
-          user_current_weight: data.user_current_weight,
+          current_weight: data.current_weight,
         },
       };
+      console.log("current weight",updatedUSer);
       const result = await UserGoalCollection.updateOne(
         filter,
         updatedUSer,
@@ -485,7 +486,7 @@ async function run() {
 
     app.delete("/delete_blog/:id", async (req, res) => {
       const id = req?.params?.id;
-      console.log(id);
+      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await BlogsCollection.deleteOne(query);
       res.send(result);
@@ -590,9 +591,9 @@ async function run() {
 
     // getting the products
     app.get("/products", async (req, res) => {
-      const email = req.query.email;
-      const verify = req.query.verify;
-      const sold = req.query.sold;
+      const email = req.query.email
+      const verify = req.query.verify
+      const sold = req.query.sold
       console.log(sold);
       let query = {};
       if (req.query.email && req.query.verify) {
@@ -623,64 +624,56 @@ async function run() {
     // })
 
     // product my id
-    app.get("/products/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await ProductsCollection.findOne(query);
-      res.send(result);
-    });
+    app.get('/products/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await ProductsCollection.findOne(query)
+      res.send(result)
+    })
     // postiong the products
     app.post("/products", async (req, res) => {
-      const data = req.body;
-      const result = await ProductsCollection.insertOne(data);
-      res.send(result);
-    });
+      const data = req.body
+      const result = await ProductsCollection.insertOne(data)
+      res.send(result)
+    })
 
     // lets verify the product
-    app.post("/product/:id", async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const option = { upsert: true };
-      const vefify = "verified";
+    app.post('/product/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const option = { upsert: true }
+      const vefify = "verified"
       const product = {
         $set: {
-          verify: vefify,
-        },
-      };
-      const result = await ProductsCollection.updateOne(
-        filter,
-        product,
-        option
-      );
-      res.send(result);
-    });
+          verify: vefify
+        }
+      }
+      const result = await ProductsCollection.updateOne(filter, product, option)
+      res.send(result)
+    })
 
-    // Marking sold products
-    app.post("/sold_product/:id", async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const option = { upsert: true };
-      const sold = "sold";
+    // Marking sold products 
+    app.post('/sold_product/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const option = { upsert: true }
+      const sold = "sold"
       // const updateProduct = req.body
       const product = {
         $set: {
-          sold: sold,
-        },
-      };
-      const result = await ProductsCollection.updateOne(
-        filter,
-        product,
-        option
-      );
-      res.send(result);
-    });
+          sold: sold
+        }
+      }
+      const result = await ProductsCollection.updateOne(filter, product, option)
+      res.send(result)
+    })
 
     // updating or modifing a product
-    app.post("/updateProduct/:id", async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const option = { upsert: true };
-      const updateProduct = req.body;
+    app.post('/updateProduct/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const option = { upsert: true }
+      const updateProduct = req.body
       const product = {
         $set: {
           Pname: updateProduct.Pname,
@@ -689,24 +682,20 @@ async function run() {
           Pdescription: updateProduct.Pdescription,
           imgUrl: updateProduct.imgUrl,
           PPhone: updateProduct.PPhone,
-          PEmail: updateProduct.PEmail,
-        },
-      };
-      const result = await ProductsCollection.updateOne(
-        filter,
-        product,
-        option
-      );
-      res.send(result);
-    });
+          PEmail: updateProduct.PEmail
+        }
+      }
+      const result = await ProductsCollection.updateOne(filter, product, option)
+      res.send(result)
+    })
 
     //product deletiong
-    app.get("/Delproduct/:id", async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const result = await ProductsCollection.deleteOne(filter);
-      res.send(result);
-    });
+    app.get('/Delproduct/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const result = await ProductsCollection.deleteOne(filter)
+      res.send(result)
+    })
 
     // products section ended
 
