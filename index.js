@@ -374,7 +374,7 @@ async function run() {
         const query = { email: email };
         const updatedRole = {
           $set: {
-            role: "Admin",
+            admin: true,
           },
         };
         const result = await UsersCollection.updateOne(query, updatedRole);
@@ -387,7 +387,7 @@ async function run() {
       const query = { email: email };
       const updatedRole = {
         $set: {
-          role: "user",
+          admin: false,
         },
       };
       const result = await UsersCollection.updateOne(query, updatedRole);
