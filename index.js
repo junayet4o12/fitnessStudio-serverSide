@@ -11,7 +11,7 @@ const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const { TIMEOUT } = require("dns");
-const frontendUrl = "https://fitness-studio.surge.sh";
+const frontendUrl = "https://fitness_studio.surge.sh";
 
 // middlewareee
 app.use(cookieParser());
@@ -374,7 +374,7 @@ async function run() {
         const query = { email: email };
         const updatedRole = {
           $set: {
-            admin: true,
+            role: "Admin",
           },
         };
         const result = await UsersCollection.updateOne(query, updatedRole);
@@ -387,7 +387,7 @@ async function run() {
       const query = { email: email };
       const updatedRole = {
         $set: {
-          admin: false,
+          role: "user",
         },
       };
       const result = await UsersCollection.updateOne(query, updatedRole);
