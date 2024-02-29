@@ -11,7 +11,7 @@ const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const { TIMEOUT } = require("dns");
-const frontendUrl = "https://fitness_studio.surge.sh";
+const frontendUrl = "https://fitness-studio.surge.sh";
 
 // middlewareee
 app.use(cookieParser());
