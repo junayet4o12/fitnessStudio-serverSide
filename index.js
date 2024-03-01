@@ -186,7 +186,11 @@ async function run() {
     // strava end
 
     // feedbackkk start
-
+    app.post("/send_feedback", async (req, res) => {
+      const data = req.body;
+      const result = await FeedbackCollection.insertOne(data);
+      res.send(result);
+    });
     app.get("/feedback", async (req, res) => {
       const result = await FeedbackCollection.find().sort({ time: -1 }).toArray();
       res.send(result);
