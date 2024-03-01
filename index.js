@@ -330,6 +330,17 @@ async function run() {
         res.send(result);
       }
     });
+    app.get("/user_completed_goal_count/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      console.log(email);
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: "forbidden" });
+      } else {
+        const query = { user_email: email, completed: true };
+        const result = await UserGoalCollection.find(query).toArray();
+        res.send({completedGoal: result?.length});
+      }
+    });
 
     app.get("/user", async (req, res) => {
       const email = req.query.email;
