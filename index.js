@@ -257,16 +257,51 @@ async function run() {
       const data = req.body;
       console.log("id", id, data);
       const filter = { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const updatedUSer = {
+      const filter2 = { email: data?.email }
+      let updatedUser = {}
+      const updatedUser2 = {
         $set: {
-          current_weight: data.current_weight,
-        },
-      };
-      console.log("current weight",updatedUSer);
+          weight: data.current_weight
+        }
+      }
+      const options = { upsert: true };
+      console.log('data is', data?.goalType, data?.targetWeight, data.current_weight);
+      if (data?.goalType == 'gainWeight' && data?.targetWeight <= data.current_weight) {
+        console.log('Completed');
+        updatedUser = {
+          $set: {
+            current_weight: data.current_weight,
+            completed: true,
+            completed_time: new Date().getTime()
+          },
+        };
+      } else if (data?.goalType == 'lossWeight' && data?.targetWeight >= data.current_weight) {
+        console.log('Completed');
+        updatedUser = {
+          $set: {
+            current_weight: data.current_weight,
+            completed: true,
+            completed_time: new Date().getTime()
+          },
+        };
+      } else {
+        console.log('incompleted');
+        updatedUser = {
+          $set: {
+            current_weight: data.current_weight,
+          },
+        };
+      }
+
+      console.log("current weight", updatedUser);
       const result = await UserGoalCollection.updateOne(
         filter,
-        updatedUSer,
+        updatedUser,
+        options
+      );
+      const result2 = await UsersCollection.updateOne(
+        filter2,
+        updatedUser2,
         options
       );
       res.send(result);
@@ -276,37 +311,38 @@ async function run() {
     app.get("/user_goal/:email", async (req, res) => {
       const email = req.params.email;
       console.log(email);
-      // if (email !== req.user.email) {
-      //     return res.status(403).send({ message: "forbidden" });
-      // } else {
-
-          const query = { user_email: email };
-          const result = await UserGoalCollection.find(query)
-                              .sort({ _id: -1 })
-                              .toArray();
-          res.send(result);
-      // }
-  })
-
-  app.put("/user_goal/:id", async (req, res) => {
-    const id = req.params.id;
-    const data = req.body;
-    console.log("id", id, data);
-    const filter = { _id: new ObjectId(id) };
-    const options = { upsert: true };
-    const updatedUSer = {
-      $set: {
-        user_current_weight: data.user_current_weight,
-      },
-    };
-    const result = await UserGoalCollection.updateOne(
-      filter,
-      updatedUSer,
-      options
-    );
-    res.send(result);
-  });
-      
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: "forbidden" });
+      } else {
+        const query = { user_email: email, completed: false };
+        const result = await UserGoalCollection.find(query)
+          .sort({ _id: -1 })
+          .toArray();
+        res.send(result);
+      }
+    });
+    app.get("/user_completed_goal/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      console.log(email);
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: "forbidden" });
+      } else {
+        const query = { user_email: email, completed: true };
+        const result = await UserGoalCollection.find(query).toArray();
+        res.send(result);
+      }
+    });
+    app.get("/user_completed_goal_count/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      console.log(email);
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: "forbidden" });
+      } else {
+        const query = { user_email: email, completed: true };
+        const result = await UserGoalCollection.find(query).toArray();
+        res.send({completedGoal: result?.length});
+      }
+    });
 
     app.get("/user", async (req, res) => {
       const email = req.query.email;
