@@ -308,7 +308,7 @@ async function run() {
     });
 
 
-    app.get("/user_goal/:email", async (req, res) => {
+    app.get("/user_goal/:email",verifyToken, async (req, res) => {
       const email = req.params.email;
       console.log(email);
       if (email !== req.user.email) {
