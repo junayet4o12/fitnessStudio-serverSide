@@ -17,7 +17,7 @@ const frontendUrl = "https://fitness-studio.surge.sh";
 app.use(cookieParser());
 app.use(
   cors({
-    origin: [frontendUrl],
+    origin: ["https://fitness-studio.surge.sh","https://fitness-studio-256b6.web.app"],
     credentials: true,
   })
 );
