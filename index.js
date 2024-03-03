@@ -17,7 +17,7 @@ const frontendUrl = "http://localhost:5173";
 app.use(cookieParser());
 app.use(
   cors({
-    origin: [frontendUrl],
+    origin: frontendUrl,
     credentials: true,
   })
 );
@@ -70,6 +70,7 @@ async function run() {
     );
     const ProductsCollection = FitnessStudio.collection("Products_Collections");
     const EventsCollection = FitnessStudio.collection("Events_Collections");
+    const HelpCollection = FitnessStudio.collection("Help_Collection");
     const EventsBookingCollection = FitnessStudio.collection(
       "Events_Booking_Collections"
     );
@@ -594,7 +595,6 @@ async function run() {
       const email = req.query.email
       const verify = req.query.verify
       const sold = req.query.sold
-      console.log(sold);
       let query = {};
       if (req.query.email && req.query.verify) {
         query = { sellerEmail: email, verify: verify };
@@ -747,6 +747,29 @@ async function run() {
     });
 
     // message endpoint end
+    //help endpoint started
+    app.get('/help', async(req, res)=>{
+      const verify = req.query.verify
+      let query = {}
+      if (req.query.verify) {
+        query = {verify: verify}
+      }
+
+      const result = await HelpCollection.find(query).toArray()
+      res.send(result)
+    })
+    app.get('/help/:id', async(req, res)=>{
+      const id = req.params.id
+      const filter = new ObjectId(id)
+      const result = await HelpCollection.find(filter).toArray()
+      res.send(result)
+    })
+    app.post('/help', async(req, res)=>{
+      const data = req.body;
+      const result = await HelpCollection.insertOne(data)
+      res.send(result)
+    })
+    //help endpoint ended
     // event api start
     app.get("/all_event", async (req, res) => {
       const result = await EventsCollection.find().toArray();
