@@ -764,9 +764,30 @@ async function run() {
       const result = await HelpCollection.find(filter).toArray()
       res.send(result)
     })
+
+    app.post('/help/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const option = { upsert: true }
+      const vefify = "verified"
+      const product = {
+        $set: {
+          verify: vefify
+        }
+      }
+      const result = await HelpCollection.updateOne(filter, product, option)
+      res.send(result)
+    })
     app.post('/help', async(req, res)=>{
       const data = req.body;
       const result = await HelpCollection.insertOne(data)
+      res.send(result)
+    })
+
+    app.get('/DeleteHelp/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const result = await HelpCollection.deleteOne(filter)
       res.send(result)
     })
     //help endpoint ended
