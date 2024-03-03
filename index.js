@@ -185,7 +185,7 @@ async function run() {
     // feedback start
 
     app.get("/feedback", async (req, res) => {
-      const result = await FeedbackCollection.find().sort({ time: -1 }).toArray();
+      const result = await FeedbackCollection.find().sort({ time: -1 }).limit(10).toArray();
       res.send(result);
     });
     app.post("/send_feedback", async (req, res) => {
