@@ -17,7 +17,7 @@ const frontendUrl = "http://localhost:5173";
 app.use(cookieParser());
 app.use(
   cors({
-    origin: frontendUrl,
+    origin: [frontendUrl],
     credentials: true,
   })
 );
@@ -183,10 +183,43 @@ async function run() {
     });
     // strava end
 
+    // Auth related api start
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user, process.env.SECRET_TOKEN, {
+        expiresIn: "1h",
+      });
+      console.log("token is", token);
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: "Lax",
+          // secure: process.env.NODE_ENV === "production" ? true : false,
+          // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ setToken: "success" });
+    });
+
+    app.post("/logout", async (req, res) => {
+      res
+        .cookie("token", "", {
+          expires: new Date(0),
+          httpOnly: true,
+          // secure: process.env.NODE_ENV === "production" ? true : false,
+          // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ message: "logged out Successfully" });
+    });
+
     // feedback start
 
     app.get("/feedback", async (req, res) => {
-      const result = await FeedbackCollection.find().sort({ time: -1 }).limit(10).toArray();
+      const result = await FeedbackCollection.find()
+        .sort({ time: -1 })
+        .limit(10)
+        .toArray();
       res.send(result);
     });
     app.post("/send_feedback", async (req, res) => {
@@ -202,30 +235,6 @@ async function run() {
     });
 
     // feedback end
-
-    // Auth related api start
-    app.post("/jwt", async (req, res) => {
-      const user = req.body;
-      console.log(user);
-      const token = jwt.sign(user, process.env.SECRET_TOKEN, {
-        expiresIn: "1h",
-      });
-      console.log("token is", token);
-      res
-        .cookie("token", token, {
-          httpOnly: true,
-          secure: false,
-          sameSite: "Lax",
-        })
-        .send({ setToken: "success" });
-    });
-
-    app.post("/logout", async (req, res) => {
-      res
-        .cookie("token", "", { expires: new Date(0), httpOnly: true })
-        .send({ message: "logged out Successfully" });
-    });
-
     // Auth related api end
 
     // fitbit api
@@ -272,7 +281,7 @@ async function run() {
       if (data?.tracking_goal === "Strength_training") {
         console.log("the whole object is", data);
         const options = { upsert: true };
-        if ( parseInt(data?.target1Rm) <= data?.new_current1rm) {
+        if (parseInt(data?.target1Rm) <= data?.new_current1rm) {
           console.log("strength training goal completed");
           updatedUserGoal = {
             $set: {
@@ -739,9 +748,9 @@ async function run() {
 
     // getting the products
     app.get("/products", async (req, res) => {
-      const email = req.query.email
-      const verify = req.query.verify
-      const sold = req.query.sold
+      const email = req.query.email;
+      const verify = req.query.verify;
+      const sold = req.query.sold;
       let query = {};
       if (req.query.email && req.query.verify) {
         query = { sellerEmail: email, verify: verify };
@@ -906,27 +915,27 @@ async function run() {
     });
     // message endpoint end
     //help endpoint started
-    app.get('/help', async(req, res)=>{
-      const verify = req.query.verify
-      let query = {}
+    app.get("/help", async (req, res) => {
+      const verify = req.query.verify;
+      let query = {};
       if (req.query.verify) {
-        query = {verify: verify}
+        query = { verify: verify };
       }
 
-      const result = await HelpCollection.find(query).toArray()
-      res.send(result)
-    })
-    app.get('/help/:id', async(req, res)=>{
-      const id = req.params.id
-      const filter = new ObjectId(id)
-      const result = await HelpCollection.find(filter).toArray()
-      res.send(result)
-    })
-    app.post('/help', async(req, res)=>{
+      const result = await HelpCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.get("/help/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = new ObjectId(id);
+      const result = await HelpCollection.find(filter).toArray();
+      res.send(result);
+    });
+    app.post("/help", async (req, res) => {
       const data = req.body;
-      const result = await HelpCollection.insertOne(data)
-      res.send(result)
-    })
+      const result = await HelpCollection.insertOne(data);
+      res.send(result);
+    });
     //help endpoint ended
     // event api start
     app.get("/all_event", async (req, res) => {
