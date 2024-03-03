@@ -259,32 +259,63 @@ async function run() {
       console.log("id", id, data);
       const filter = { _id: new ObjectId(id) };
       const filter2 = { email: data?.email };
-      let updatedUser = {};
+      let updatedUserGoal = {};
+
+      // Strength training goal update starts here
+
+      if (data?.tracking_goal === "Strength_training") {
+        console.log("the whole object is", data);
+        const options = { upsert: true };
+        if ( parseInt(data?.target1Rm) <= data?.new_current1rm) {
+          console.log("strength training goal completed");
+          updatedUserGoal = {
+            $set: {
+              new_current1rm: data?.new_current1rm,
+              completed: true,
+              completed_time: new Date().getTime(),
+            },
+          };
+        } else {
+          updatedUserGoal = {
+            $set: {
+              new_current1rm: data?.new_current1rm,
+            },
+          };
+          console.log("current covered distance", updatedUserGoal);
+        }
+        const result = await UserGoalCollection.updateOne(
+          filter,
+          updatedUserGoal,
+          options
+        );
+        res.send(result);
+      }
+
+      // Strength training goal update ends here
 
       // Endurance Goal update starts
-      if (data?.tracking_goal === "Endurance") {
+      else if (data?.tracking_goal === "Endurance") {
         const options = { upsert: true };
         if (data?.current_distance >= data?.distance) {
           console.log("Endurance goal completed");
-          updatedUser = {
-            $set:{
-
+          updatedUserGoal = {
+            $set: {
               current_distance: data?.current_distance,
               completed: true,
               completed_time: new Date().getTime(),
             },
           };
         } else {
-          updatedUser = {
+          updatedUserGoal = {
             $set: {
               current_distance: data?.current_distance,
             },
           };
-          console.log("current covered distance", updatedUser);
+          console.log("current covered distance", updatedUserGoal);
         }
         const result = await UserGoalCollection.updateOne(
           filter,
-          updatedUser,
+          updatedUserGoal,
           options
         );
         res.send(result);
@@ -294,7 +325,7 @@ async function run() {
 
       // Weight management goal update start
       else {
-        const updatedUser2 = {
+        const updatedUserGoal2 = {
           $set: {
             weight: data.current_weight,
           },
@@ -311,7 +342,7 @@ async function run() {
           data?.targetWeight <= data.current_weight
         ) {
           console.log("Completed");
-          updatedUser = {
+          updatedUserGoal = {
             $set: {
               current_weight: data.current_weight,
               completed: true,
@@ -323,7 +354,7 @@ async function run() {
           data?.targetWeight >= data.current_weight
         ) {
           console.log("Completed");
-          updatedUser = {
+          updatedUserGoal = {
             $set: {
               current_weight: data.current_weight,
               completed: true,
@@ -332,22 +363,22 @@ async function run() {
           };
         } else {
           console.log("incompleted");
-          updatedUser = {
+          updatedUserGoal = {
             $set: {
               current_weight: data.current_weight,
             },
           };
         }
 
-        console.log("current weight", updatedUser);
+        console.log("current weight", updatedUserGoal);
         const result = await UserGoalCollection.updateOne(
           filter,
-          updatedUser,
+          updatedUserGoal,
           options
         );
         const result2 = await UsersCollection.updateOne(
           filter2,
-          updatedUser2,
+          updatedUserGoal2,
           options
         );
         res.send(result);
