@@ -11,13 +11,13 @@ const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const { TIMEOUT } = require("dns");
-const frontendUrl = "http://localhost:5173";
+const frontendUrl = "https://fitness-studio.surge.sh";
 
 // middlewareee
 app.use(cookieParser());
 app.use(
   cors({
-    origin: frontendUrl,
+    origin: [frontendUrl],
     credentials: true,
   })
 );
@@ -183,6 +183,33 @@ async function run() {
     });
     // strava end
 
+
+    // Auth related api start
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user, process.env.SECRET_TOKEN, {
+        expiresIn: "1h",
+      });
+      console.log("token is", token);
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production" ? true : false,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ setToken: "success" });
+    });
+
+    app.post("/logout", async (req, res) => {
+      res
+        .cookie("token", "", { expires: new Date(0), httpOnly: true,secure: process.env.NODE_ENV === "production" ? true : false,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict", })
+        .send({ message: "logged out Successfully" });
+    });
+
+
+    
     // feedback start
 
     app.get("/feedback", async (req, res) => {
@@ -202,30 +229,6 @@ async function run() {
     });
 
     // feedback end
-
-    // Auth related api start
-    app.post("/jwt", async (req, res) => {
-      const user = req.body;
-      console.log(user);
-      const token = jwt.sign(user, process.env.SECRET_TOKEN, {
-        expiresIn: "1h",
-      });
-      console.log("token is", token);
-      res
-        .cookie("token", token, {
-          httpOnly: true,
-          secure: false,
-          sameSite: "Lax",
-        })
-        .send({ setToken: "success" });
-    });
-
-    app.post("/logout", async (req, res) => {
-      res
-        .cookie("token", "", { expires: new Date(0), httpOnly: true })
-        .send({ message: "logged out Successfully" });
-    });
-
     // Auth related api end
 
     // fitbit api
