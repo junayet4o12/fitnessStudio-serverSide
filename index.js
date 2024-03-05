@@ -11,8 +11,8 @@ const axios = require("axios");
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const { TIMEOUT } = require("dns");
-// const frontendUrl = "http://localhost:5173";
-const frontendUrl = "https://fitness-studio.surge.sh"
+const frontendUrl = "http://localhost:5173";
+// const frontendUrl = "https://fitness-studio.surge.sh/"
 
 // middlewareee
 app.use(cookieParser());
@@ -196,10 +196,10 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          // secure: false,
-          // sameSite: "Lax",
-          secure: process.env.NODE_ENV === "production" ? true : false,
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          secure: false,
+          sameSite: "Lax",
+          // secure: process.env.NODE_ENV === "production" ? true : false,
+          // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({ setToken: "success" });
     });
@@ -209,8 +209,8 @@ async function run() {
         .cookie("token", "", {
           expires: new Date(0),
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production" ? true : false,
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          // secure: process.env.NODE_ENV === "production" ? true : false,
+          // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({ message: "logged out Successfully" });
     });
@@ -401,15 +401,14 @@ async function run() {
         res.send(result);
       }
     });
-      // Weight management goal update ends
+    // Weight management goal update ends
 
-      // Quote related api starts here
-      app.get("/quotes", async (req, res) => {
-        const result = await QuoteCollections.find().toArray();
-        res.send(result);
-      });
-      // Quote related api ends here
-   
+    // Quote related api starts here
+    app.get("/quotes", async (req, res) => {
+      const result = await QuoteCollections.find().toArray();
+      res.send(result);
+    });
+    // Quote related api ends here
 
     app.get("/user_goal/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -722,7 +721,9 @@ async function run() {
       const removeFromFollowed = {
         $pull: { followed: followingId },
       };
+
       // result for following
+
       const unfollowingResult = await UsersCollection.updateOne(
         query1,
         removeFromFollowing
@@ -734,6 +735,27 @@ async function run() {
       );
       res.send({ unfollowingResult, unfollowedResult });
     });
+
+    app.get("/following_users_blog/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const query = { email: email };
+        const result = await UsersCollection.findOne(query);
+
+        if (!result) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        const followingUsersBlogs = await BlogsCollection.find({
+          userId: { $in: result.following || [] },
+        }).toArray();
+        res.send(followingUsersBlogs);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+      }
+    });
+    // connecting people end
+
     app.get("/get_following_and_follower/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
