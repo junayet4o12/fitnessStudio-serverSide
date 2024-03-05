@@ -904,7 +904,10 @@ async function run() {
       const query = {  receiver: you, seen: false };
       console.log(query);
       const result = await UserMessagesCollection.find(query).toArray();
-      res.send({ count: result.length });
+      let newArray = result.filter(arr=> arr.sender && arr.receiver)
+      console.log(newArray.length, result.length);
+      
+      res.send({ count: newArray.length,result: newArray });
     });
     app.put("/read_message", async (req, res) => {
       const { you, friend } = req?.query;
