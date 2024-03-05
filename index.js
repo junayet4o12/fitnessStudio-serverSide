@@ -8,10 +8,12 @@ const port = process.env.PORT || 5000;
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const { TIMEOUT } = require("dns");
 const frontendUrl = "http://localhost:5173";
+// const frontendUrl = "https://fitness-studio.surge.sh/"
 
 // middlewareee
 app.use(cookieParser());
@@ -64,6 +66,7 @@ async function run() {
     const FeedbackCollection = FitnessStudio.collection("Feedback");
     const UsersCollection = FitnessStudio.collection("Users");
     const UserGoalCollection = FitnessStudio.collection("User_Goal");
+    const QuoteCollections = FitnessStudio.collection("QuoteCollection");
     const BlogsCollection = FitnessStudio.collection("Blogs_Collections");
     const UserMessagesCollection = FitnessStudio.collection(
       "UserMessages_Collections"
@@ -74,6 +77,7 @@ async function run() {
     const EventsBookingCollection = FitnessStudio.collection(
       "Events_Booking_Collections"
     );
+    const donationCollection = FitnessStudio.collection("Donation_Collection");
 
     // verify Admin  start
     const verifyadmin = async (req, res, next) => {
@@ -212,6 +216,27 @@ async function run() {
         })
         .send({ message: "logged out Successfully" });
     });
+
+    //Payments starts Here
+
+    app.post("/payments", async (req, res) => {
+      const paymentInfo = req.body;
+      const result = await donationCollection.insertOne(paymentInfo);
+      res.send(result);
+    });
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+
+      const amount = parseInt(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({ clientSecret: paymentIntent.client_secret });
+    });
+
+    // Payments ends Here
 
     // feedback start
 
@@ -398,9 +423,15 @@ async function run() {
         );
         res.send(result);
       }
-
-      // Weight management goal update ends
     });
+    // Weight management goal update ends
+
+    // Quote related api starts here
+    app.get("/quotes", async (req, res) => {
+      const result = await QuoteCollections.find().toArray();
+      res.send(result);
+    });
+    // Quote related api ends here
 
     app.get("/user_goal/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -713,7 +744,9 @@ async function run() {
       const removeFromFollowed = {
         $pull: { followed: followingId },
       };
+
       // result for following
+
       const unfollowingResult = await UsersCollection.updateOne(
         query1,
         removeFromFollowing
@@ -725,6 +758,27 @@ async function run() {
       );
       res.send({ unfollowingResult, unfollowedResult });
     });
+
+    app.get("/following_users_blog/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const query = { email: email };
+        const result = await UsersCollection.findOne(query);
+
+        if (!result) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        const followingUsersBlogs = await BlogsCollection.find({
+          userId: { $in: result.following || [] },
+        }).toArray();
+        res.send(followingUsersBlogs);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+      }
+    });
+    // connecting people end
+
     app.get("/get_following_and_follower/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
@@ -901,7 +955,7 @@ async function run() {
     app.get("/all_unread_message_count", async (req, res) => {
       const { you } = req?.query;
       console.log(you);
-      const query = {  receiver: you, seen: false };
+      const query = { receiver: you, seen: false };
       console.log(query);
       const result = await UserMessagesCollection.find(query).toArray();
       let newArray = result.filter(arr=> arr.sender && arr.receiver)
@@ -933,41 +987,58 @@ async function run() {
         query = { verify: verify };
       }
 
-      const result = await HelpCollection.find(query).toArray()
-      res.send(result)
-    })
-    app.get('/help/:id', async(req, res)=>{
-      const id = req.params.id
-      const filter = new ObjectId(id)
-      const result = await HelpCollection.find(filter).toArray()
-      res.send(result)
-    })
+      const result = await HelpCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.get("/help/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = new ObjectId(id);
+      const result = await HelpCollection.find(filter).toArray();
+      res.send(result);
+    });
 
-    app.post('/help/:id', async (req, res) => {
-      const id = req.params.id
-      const filter = { _id: new ObjectId(id) }
-      const option = { upsert: true }
-      const vefify = "verified"
+    app.post("/help/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const option = { upsert: true };
+      const vefify = "verified";
       const product = {
         $set: {
-          verify: vefify
-        }
-      }
-      const result = await HelpCollection.updateOne(filter, product, option)
-      res.send(result)
-    })
-    app.post('/help', async(req, res)=>{
+          verify: vefify,
+        },
+      };
+      const result = await HelpCollection.updateOne(filter, product, option);
+      res.send(result);
+    });
+    app.post("/help", async (req, res) => {
       const data = req.body;
-      const result = await HelpCollection.insertOne(data)
-      res.send(result)
-    })
+      const result = await HelpCollection.insertOne(data);
+      res.send(result);
+    });
 
-    app.get('/DeleteHelp/:id', async (req, res) => {
-      const id = req.params.id
-      const filter = { _id: new ObjectId(id) }
-      const result = await HelpCollection.deleteOne(filter)
-      res.send(result)
-    })
+    app.get("/DeleteHelp/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await HelpCollection.deleteOne(filter);
+      res.send(result);
+    });
+    // Help collection starts
+
+    app.put("/help/update/:id", verifyToken, async (req, res) => {
+      const id = req.params;
+      const { donatedAmount } = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $inc: {
+          donated_amount: donatedAmount,
+        },
+      };
+      const result = await HelpCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+    // Help collection ends
+
     //help endpoint ended
     // event api start
     app.get("/all_event", async (req, res) => {
