@@ -898,6 +898,14 @@ async function run() {
       const result = await UserMessagesCollection.find(query).toArray();
       res.send({ count: result.length });
     });
+    app.get("/all_unread_message_count", async (req, res) => {
+      const { you } = req?.query;
+      console.log(you);
+      const query = {  receiver: you, seen: false };
+      console.log(query);
+      const result = await UserMessagesCollection.find(query).toArray();
+      res.send({ count: result.length });
+    });
     app.put("/read_message", async (req, res) => {
       const { you, friend } = req?.query;
       console.log(you, friend);
