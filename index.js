@@ -78,6 +78,9 @@ async function run() {
       "Events_Booking_Collections"
     );
     const donationCollection = FitnessStudio.collection("Donation_Collection");
+    const NotificationCollection = FitnessStudio.collection(
+      "Notification_Collection"
+    );
 
     // verify Admin  start
     const verifyadmin = async (req, res, next) => {
@@ -238,6 +241,22 @@ async function run() {
 
     // Payments ends Here
 
+    //Notification center starts
+
+    app.post("/notifications", async (req, res) => {
+      const data = req.body;
+      const result = await NotificationCollection.insertOne(data);
+      res.send(result);
+    });
+    app.get("/notifications", async (req, res) => {
+      const result = await NotificationCollection.find()
+        .sort({ time: -1 })
+        .limit(10)
+        .toArray();
+      res.send(result);
+    });
+
+    //Notification center ends
     // feedback start
 
     app.get("/feedback", async (req, res) => {
@@ -959,10 +978,10 @@ async function run() {
       const query = { receiver: you, seen: false };
       console.log(query);
       const result = await UserMessagesCollection.find(query).toArray();
-      let newArray = result.filter(arr=> arr.sender && arr.receiver)
+      let newArray = result.filter((arr) => arr.sender && arr.receiver);
       console.log(newArray.length, result.length);
-      
-      res.send({ count: newArray.length,result: newArray });
+
+      res.send({ count: newArray.length, result: newArray });
     });
     app.put("/read_message", async (req, res) => {
       const { you, friend } = req?.query;
@@ -1028,12 +1047,20 @@ async function run() {
     app.put("/help/update/:id", verifyToken, async (req, res) => {
       const id = req.params;
       const { donatedAmount } = req.body;
-
+  
       const filter = { _id: new ObjectId(id) };
+      const existingHelp = await HelpCollection.findOne(filter)
+      const currentraised = existingHelp.Raised
+      const updatedRaisedAmount = currentraised + donatedAmount;
+      console.log(currentraised);
+
       const updatedDoc = {
         $inc: {
           donated_amount: donatedAmount,
         },
+        $set: {
+          Raised:   updatedRaisedAmount,
+        }
       };
       const result = await HelpCollection.updateOne(filter, updatedDoc);
       res.send(result);
