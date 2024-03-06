@@ -1046,12 +1046,20 @@ async function run() {
     app.put("/help/update/:id", verifyToken, async (req, res) => {
       const id = req.params;
       const { donatedAmount } = req.body;
-
+  
       const filter = { _id: new ObjectId(id) };
+      const existingHelp = await HelpCollection.findOne(filter)
+      const currentraised = existingHelp.Raised
+      const updatedRaisedAmount = currentraised + donatedAmount;
+      console.log(currentraised);
+
       const updatedDoc = {
         $inc: {
           donated_amount: donatedAmount,
         },
+        $set: {
+          Raised:   updatedRaisedAmount,
+        }
       };
       const result = await HelpCollection.updateOne(filter, updatedDoc);
       res.send(result);
