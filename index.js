@@ -12,8 +12,8 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const { TIMEOUT } = require("dns");
-const frontendUrl = "http://localhost:5173";
-// const frontendUrl = "https://fitness-studio.surge.sh/"
+// const frontendUrl = "http://localhost:5173";
+const frontendUrl = "https://fitness-studio.surge.sh/"
 
 // middlewareee
 app.use(cookieParser());
@@ -201,10 +201,10 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
-          sameSite: "Lax",
-          // secure: process.env.NODE_ENV === "production" ? true : false,
-          // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          // secure: false,
+          // sameSite: "Lax",
+          secure: process.env.NODE_ENV === "production" ? true : false,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({ setToken: "success" });
     });
