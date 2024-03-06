@@ -816,6 +816,7 @@ async function run() {
         query = { sold: sold };
       }
       const result = await ProductsCollection.find(query).toArray();
+      console.log(result);
       res.send(result);
     });
 
@@ -934,7 +935,7 @@ async function run() {
     });
     app.get("/message_with_friend", async (req, res) => {
       const { you, friend } = req?.query;
-      console.log(you, friend);
+      // console.log(you, friend);
       const query = {
         $or: [
           { sender: you, receiver: friend },
@@ -946,9 +947,9 @@ async function run() {
     });
     app.get("/unread_message", async (req, res) => {
       const { you, friend } = req?.query;
-      console.log(you, friend);
+      // console.log(you, friend);
       const query = { sender: friend, receiver: you, seen: false };
-      console.log(query);
+      // console.log('inline 951',query);
       const result = await UserMessagesCollection.find(query).toArray();
       res.send({ count: result.length });
     });
@@ -965,7 +966,7 @@ async function run() {
     });
     app.put("/read_message", async (req, res) => {
       const { you, friend } = req?.query;
-      console.log(you, friend);
+      // console.log(you, friend);
       const query = { sender: friend, receiver: you, seen: false };
       const updatedData = {
         $set: {
