@@ -251,7 +251,7 @@ async function run() {
     app.get("/notifications", async (req, res) => {
       const result = await NotificationCollection.find()
         .sort({ time: -1 })
-        .limit(10)
+        .limit(200)
         .toArray();
       res.send(result);
     });
