@@ -12,8 +12,8 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const queryString = require("querystring");
 const axiosSecure = require("./axiosSecure");
 const { TIMEOUT } = require("dns");
-// const frontendUrl = "http://localhost:5173";
-const frontendUrl = "https://fitness-studio.surge.sh"
+const frontendUrl = "http://localhost:5173";
+// const frontendUrl = "https://fitness-studio.surge.sh"
 
 // middlewareee
 app.use(cookieParser());
